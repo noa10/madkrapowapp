@@ -47,7 +47,6 @@ class AuthController extends Controller
             'password' => Hash::make($request->password),
             'address' => $request->address,
             'is_verified' => false,
-            'date_created' => now(),
         ]);
 
         Auth::login($user);
@@ -73,6 +72,7 @@ class AuthController extends Controller
      */
     public function login(Request $request)
     {
+        // xdebug_break(); // Manual breakpoint
         $credentials = $request->validate([
             'email' => 'required|email',
             'password' => 'required',

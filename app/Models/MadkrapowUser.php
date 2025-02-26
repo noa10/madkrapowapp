@@ -2,10 +2,9 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Laravel\Sanctum\HasApiTokens;
 
 class MadkrapowUser extends Authenticatable
@@ -26,8 +25,6 @@ class MadkrapowUser extends Authenticatable
         'password',
         'address',
         'is_verified',
-        'date_modified',
-        'date_created',
     ];
 
     /**
@@ -49,8 +46,6 @@ class MadkrapowUser extends Authenticatable
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
         'is_verified' => 'boolean',
-        'date_modified' => 'datetime',
-        'date_created' => 'datetime',
     ];
 
     /**
