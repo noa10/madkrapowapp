@@ -26,7 +26,7 @@ jobs:
       - name: Setup PHP with Laravel Sail
         run: |
           docker-compose up -d
-          docker-compose exec -T laravel.test composer install
+          docker-compose exec -T laravel.test composer install -q --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist
           docker-compose exec -T laravel.test npm ci
 
       - name: Build Assets
