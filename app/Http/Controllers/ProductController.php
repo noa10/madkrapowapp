@@ -30,11 +30,16 @@ class ProductController extends Controller
      */
     public function show($id)
     {
-        $product = MadkrapowProduct::findOrFail($id);
-        $reviews = $product->reviews()->with('user')->get();
-        $averageRating = $reviews->avg('rating');
-        
-        return view('products.show', compact('product', 'reviews', 'averageRating'));
+        $product = MadkrapowProduct::select('product_id', 'product_name', 'description', 'price', 'stock_quantity', 'image_path')
+            ->with(['reviews.madkrapowUser'])
+            ->withCount('reviews')
+            ->withAvg('reviews', 'rating')
+            ->findOrFail($id);
+
+        return view('products.show', [
+            'product' => $product,
+            'reviews' => $product->reviews()->paginate(5)
+        ]);
     }
 
     /**
@@ -108,7 +113,8 @@ class ProductController extends Controller
         //     return redirect()->route('home')->with('error', 'Unauthorized access.');
         // }
         
-        $product = MadkrapowProduct::findOrFail($id);
+        $product = MadkrapowProduct::select('product_id', 'product_name', 'description', 'price', 'stock_quantity', 'image_path')
+            ->findOrFail($id);
         return view('products.edit', compact('product'));
     }
 

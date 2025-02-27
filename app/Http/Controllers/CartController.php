@@ -21,11 +21,11 @@ class CartController extends Controller
             ->with('product')
             ->get();
             
-        $total = $cartItems->sum(function ($item) {
+        $subtotal = $cartItems->sum(function ($item) {
             return $item->quantity * $item->product->price;
         });
         
-        return view('cart.index', compact('cartItems', 'total'));
+        return view('cart.index', compact('cartItems', 'subtotal'));
     }
 
     /**
@@ -83,7 +83,7 @@ class CartController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\RedirectResponse
      */
-    public function updateQuantity(Request $request, $id)
+    public function updateQuantity(Request $request, $cartItemId)
     {
         $validator = Validator::make($request->all(), [
             'quantity' => 'required|integer|min:1',
@@ -95,7 +95,7 @@ class CartController extends Controller
                 ->withInput();
         }
 
-        $cartItem = MadkrapowCartItem::where('cart_item_id', $id)
+        $cartItem = MadkrapowCartItem::where('cart_item_id', $cartItemId)
             ->where('user_id', Auth::id())
             ->firstOrFail();
             
@@ -118,9 +118,9 @@ class CartController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\RedirectResponse
      */
-    public function removeItem($id)
+    public function removeItem($cartItemId)
     {
-        $cartItem = MadkrapowCartItem::where('cart_item_id', $id)
+        $cartItem = MadkrapowCartItem::where('cart_item_id', $cartItemId)
             ->where('user_id', Auth::id())
             ->firstOrFail();
             

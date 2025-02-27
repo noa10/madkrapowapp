@@ -33,7 +33,10 @@
                     <h4 class="mb-0">My Orders</h4>
                 </div>
                 <div class="card-body">
-                    @if($orders->count() > 0)
+                    @if($orders->total() > 0)
+                        <div class="alert alert-info mb-4">
+                            Showing {{ $orders->firstItem() }} to {{ $orders->lastItem() }} of {{ $orders->total() }} orders
+                        </div>
                         <div class="table-responsive">
                             <table class="table table-hover">
                                 <thead>

@@ -53,9 +53,10 @@
                                             </td>
                                             <td>RM {{ number_format($item->product->price, 2) }}</td>
                                             <td>
-                                                <form action="{{ route('cart.update') }}" method="POST" class="d-flex align-items-center quantity-form">
-                                                    @csrf
-                                                    <input type="hidden" name="cart_item_id" value="{{ $item->cart_item_id }}">
+<form action="{{ route('cart.update', ['id' => $item->cart_item_id]) }}" method="POST" class="d-flex align-items-center quantity-form">
+    @csrf
+    @method('PUT')
+    <input type="hidden" name="cart_item_id" value="{{ $item->cart_item_id }}">
                                                     <div class="input-group input-group-sm" style="width: 120px;">
                                                         <button type="button" class="btn btn-outline-secondary decrease-quantity">
                                                             <i class="bi bi-dash"></i>
@@ -70,7 +71,7 @@
                                             </td>
                                             <td class="fw-bold item-total">RM {{ number_format($item->product->price * $item->quantity, 2) }}</td>
                                             <td>
-                                                <form action="{{ route('cart.remove') }}" method="POST" class="d-inline">
+                                                <form action="{{ route('cart.remove', ['cartItemId' => $item->cart_item_id]) }}" method="POST" class="d-inline">
                                                     @csrf
                                                     <input type="hidden" name="cart_item_id" value="{{ $item->cart_item_id }}">
                                                     <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Are you sure you want to remove this item?')">

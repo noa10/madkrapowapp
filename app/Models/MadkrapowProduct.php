@@ -19,9 +19,9 @@ class MadkrapowProduct extends Model
      */
     protected $fillable = [
         'product_name',
+        'description',
         'price',
         'stock_quantity',
-        'description',
         'image_path',
     ];
 

@@ -18,7 +18,10 @@
         <!-- Product Image -->
         <div class="col-md-6 mb-4 mb-md-0">
             <div class="position-relative">
-                <img src="{{ $product->image_path ? asset('storage/' . $product->image_path) : '/pesmadkrapow.png' }}" class="img-fluid rounded" alt="{{ $product->product_name }}">
+        <img src="{{ $product->image_path ? asset('storage/' . $product->image_path) : asset('images/madkrapow.png') }}" 
+             class="img-fluid rounded" 
+             alt="{{ $product->product_name }}" 
+             loading="lazy">
                 
                 @if($product->stock_quantity <= 0)
                     <div class="position-absolute top-0 end-0 m-3">
@@ -167,7 +170,11 @@
                                         <li class="mb-2">Tabur herba, siap!</li>
                                     </ol>
                                     <div class="text-center mt-3">
-                                        <img src="/pesmadkrapow.png" class="img-fluid rounded" style="max-height: 150px;" alt="Cooking Instructions">
+                                        <img src="{{ asset('images/pesmadkrapow.png') }}" 
+                                             class="img-fluid rounded" 
+                                             style="max-height: 150px;" 
+                                             alt="Cooking Instructions"
+                                             loading="lazy">
                                     </div>
                                 </div>
                             </div>
@@ -190,7 +197,7 @@
                                     <p class="text-muted mb-4">Based on {{ $product->reviews_count ?? 0 }} {{ Str::plural('review', $product->reviews_count ?? 0) }}</p>
                                     
                                     @if(auth()->check())
-                                        <a href="{{ route('reviews.create', ['product_id' => $product->product_id]) }}" class="btn btn-primary">
+                                        <a href="{{ route('reviews.create', ['productId' => $product->product_id]) }}" class="btn btn-primary">
                                             <i class="bi bi-star me-1"></i> Write a Review
                                         </a>
                                     @else
@@ -207,15 +214,15 @@
                             
                             @if(isset($reviews) && $reviews->count() > 0)
                                 @foreach($reviews as $review)
-                                    <div class="card mb-3">
+                                    <div class="card mb-3 review-card">
                                         <div class="card-body">
                                             <div class="d-flex justify-content-between align-items-center mb-3">
                                                 <div class="d-flex align-items-center">
-                                                    <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
-                                                        <span>{{ substr($review->user->name ?? 'U', 0, 1) }}</span>
+                                                    <div class="user-avatar rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-3">
+                                                        <span>{{ substr(optional($review->madkrapowUser)->name ?? 'U', 0, 1) }}</span>
                                                     </div>
                                                     <div>
-                                                        <h6 class="mb-0">{{ $review->user->name ?? 'User' }}</h6>
+                                                        <h6 class="mb-0">{{ $review->madkrapowUser->name ?? 'User' }}</h6>
                                                         <small class="text-muted">{{ isset($review->review_date) ? $review->review_date->format('M d, Y') : date('M d, Y') }}</small>
                                                     </div>
                                                 </div>
@@ -241,18 +248,91 @@
                 <!-- Shipping Tab -->
                 <div class="tab-pane fade" id="shipping" role="tabpanel" aria-labelledby="shipping-tab">
                     <h4 class="mb-4">Shipping Information</h4>
-                    <div class="mb-4">
-                        <h5>Delivery Options</h5>
-                        <ul>
-                            <li><strong>Standard Delivery:</strong> 3-5 business days (Free for orders over RM 100)</li>
-                            <li><strong>Express Delivery:</strong> 1-2 business days (Additional charges apply)</li>
-                        </ul>
-                    </div>
-                    
-                    <div class="mb-4">
-                        <h5>Return Policy</h5>
-                        <p>We accept returns within 30 days of delivery. Items must be unused and in their original packaging.</p>
-                    </div>
+                    @if($shipping = App\Models\MadkrapowShippingSettings::first())
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="card mb-4">
+                                    <div class="card-body">
+                                        <h5 class="card-title"><i class="bi bi-truck me-2"></i>Delivery Options</h5>
+                                        <ul class="list-unstyled">
+                                            <li class="mb-3">
+                                                <strong>Standard Delivery:</strong><br>
+                                                {{ $shipping->standard_delivery_days }} business days<br>
+                                                {!! $shipping->standard_delivery_cost > 0 ? 
+                                                    '<span class="text-danger">RM '.number_format($shipping->standard_delivery_cost, 2).'</span>' : 
+                                                    '<span class="text-success">FREE</span>' !!}
+                                            </li>
+                                            <li class="mb-3">
+                                                <strong>Express Delivery:</strong><br>
+                                                {{ $shipping->express_delivery_days }} business days<br>
+                                                <span class="text-danger">RM {{ number_format($shipping->express_delivery_cost, 2) }}</span>
+                                            </li>
+                                            @if($shipping->free_shipping_threshold)
+                                                <li class="text-success">
+                                                    <i class="bi bi-check2-circle me-2"></i>
+                                                    Free shipping on orders over RM {{ number_format($shipping->free_shipping_threshold, 2) }}
+                                                </li>
+                                            @endif
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="card mb-4">
+                                    <div class="card-body">
+                                        <h5 class="card-title"><i class="bi bi-clock-history me-2"></i>Processing Time</h5>
+                                        <p class="card-text">
+                                            Orders typically ship within 
+                                            <strong>{{ $shipping->handling_time }} business day{{ $shipping->handling_time > 1 ? 's' : '' }}</strong> 
+                                            of purchase
+                                        </p>
+                                        @if($shipping->same_day_available)
+                                            <div class="alert alert-success mt-3">
+                                                <i class="bi bi-lightning-charge me-2"></i>
+                                                Same-day processing available for orders placed before 
+                                                {{ \Carbon\Carbon::parse($shipping->same_day_cutoff)->format('g:i A') }}
+                                            </div>
+                                        @endif
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card border-primary">
+                            <div class="card-header bg-primary text-white">
+                                <h5 class="mb-0"><i class="bi bi-arrow-return-right me-2"></i>Return Policy</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <ul class="list-unstyled">
+                                            @if($shipping->return_window_days)
+                                                <li class="mb-3">
+                                                    <strong>{{ $shipping->return_window_days }}-Day Returns</strong><br>
+                                                    <small class="text-muted">From delivery date</small>
+                                                </li>
+                                            @endif
+                                            @if($shipping->free_returns)
+                                                <li class="mb-3 text-success">
+                                                    <i class="bi bi-check2-circle me-2"></i>
+                                                    Free Returns
+                                                </li>
+                                            @endif
+                                        </ul>
+                                    </div>
+                                    <div class="col-md-8">
+                                        {!! $shipping->return_policy !!}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    @else
+                        <div class="alert alert-warning">
+                            <i class="bi bi-exclamation-triangle me-2"></i>
+                            Shipping information currently being updated - please check back later
+                        </div>
+                    @endif
                 </div>
             </div>
         </div>
@@ -262,27 +342,32 @@
 @section('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Quantity buttons
-        const decreaseBtn = document.querySelector('.decrease-quantity');
-        const increaseBtn = document.querySelector('.increase-quantity');
-        const quantityInput = document.querySelector('#quantity');
-        
-        if (decreaseBtn && increaseBtn && quantityInput) {
-            decreaseBtn.addEventListener('click', function() {
-                const currentValue = parseInt(quantityInput.value);
-                if (currentValue > 1) {
-                    quantityInput.value = currentValue - 1;
-                }
-            });
-            
-            increaseBtn.addEventListener('click', function() {
-                const currentValue = parseInt(quantityInput.value);
-                const maxValue = parseInt(quantityInput.getAttribute('max'));
-                if (currentValue < maxValue) {
-                    quantityInput.value = currentValue + 1;
-                }
-            });
-        }
+        // Quantity buttons - handle all instances on page
+        document.querySelectorAll('.input-group').forEach(group => {
+            const decreaseBtn = group.querySelector('.decrease-quantity');
+            const increaseBtn = group.querySelector('.increase-quantity');
+            const quantityInput = group.querySelector('input[type="number"]');
+
+            if (decreaseBtn && increaseBtn && quantityInput) {
+                decreaseBtn.addEventListener('click', () => {
+                    const currentValue = parseInt(quantityInput.value);
+                    quantityInput.value = Math.max(parseInt(quantityInput.min || 1), currentValue - 1);
+                });
+
+                increaseBtn.addEventListener('click', () => {
+                    const currentValue = parseInt(quantityInput.value);
+                    const maxValue = parseInt(quantityInput.max || 999);
+                    quantityInput.value = Math.min(maxValue, currentValue + 1);
+                });
+
+                quantityInput.addEventListener('input', () => {
+                    let value = parseInt(quantityInput.value) || 1;
+                    const min = parseInt(quantityInput.min) || 1;
+                    const max = parseInt(quantityInput.max) || 999;
+                    quantityInput.value = Math.min(Math.max(value, min), max);
+                });
+            }
+        });
     });
 </script>
 @endsection
