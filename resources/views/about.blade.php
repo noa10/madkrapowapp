@@ -1,77 +1,90 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="bg-gradient-to-b from-madkrapow-red/5 to-white">
-    <div class="container mx-auto px-4 py-16">
+<div class="about-page-bg">
+    <div class="container py-5">
         {{-- Hero Section --}}
-        <div class="text-center mb-16">
-            <h1 class="text-5xl font-extrabold text-gray-900 mb-4 animate-fade-in-up">
+        <div class="text-center mb-5">
+            <h1 class="display-4 text-dark mb-4">
                 Crafting Authentic Thai Flavors
             </h1>
-            <p class="text-xl text-gray-600 max-w-2xl mx-auto">
+            <p class="lead text-secondary mx-auto" style="max-width: 600px">
                 Where tradition meets innovation in every bite
             </p>
         </div>
 
         {{-- Introduction Section --}}
-        <section class="mb-12">
-            <h2 class="text-2xl font-semibold text-gray-700 mb-4">Our Story</h2>
-            <p class="text-gray-600 leading-relaxed mb-4">
-                Founded in 2023, Madkrapow brings authentic Thai street food flavors to your doorstep. 
-                What started as a small family recipe has grown into a beloved local institution, thanks 
+        <section class="mb-5">
+            <h2 class="h3 text-dark mb-3">Our Story</h2>
+            <p class="text-muted mb-4">
+                Founded in 2023, Madkrapow brings authentic Thai street food flavors to your doorstep.
+                What started as a small family recipe has grown into a beloved local institution, thanks
                 to our commitment to quality ingredients and traditional cooking methods.
             </p>
         </section>
 
         {{-- Values Section --}}
-        <section class="mb-20">
-            <div class="max-w-7xl mx-auto">
-                <h2 class="text-3xl font-bold text-gray-900 text-center mb-12">Our Core Values</h2>
-                <div class="grid md:grid-cols-3 gap-8">
-                    <div class="p-8 bg-white rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300">
-                        <div class="w-16 h-16 bg-madkrapow-red/10 rounded-xl flex items-center justify-center mb-4">
-                            <svg class="w-8 h-8 text-madkrapow-red" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                            </svg>
+        <section class="mb-5">
+            <div class="row justify-content-center">
+                <h2 class="text-center h2 mb-5">Our Core Values</h2>
+                <div class="row g-4">
+                    <div class="col-md-4">
+                        <div class="card h-100 shadow-sm">
+                            <div class="card-body text-center">
+                                <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                                    <svg class="svg-icon text-danger w-25" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                    </svg>
+                                </div>
+                                <h3 class="h4 mb-2">Fresh Ingredients</h3>
+                                <p class="text-muted">Daily-sourced local produce and premium meats curated by our master chefs.</p>
+                            </div>
                         </div>
-                        <h3 class="text-xl font-semibold text-gray-900 mb-2">Fresh Ingredients</h3>
-                        <p class="text-gray-600">Daily-sourced local produce and premium meats curated by our master chefs.</p>
                     </div>
-                    <div class="p-8 bg-white rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300">
-                        <div class="w-16 h-16 bg-madkrapow-red/10 rounded-xl flex items-center justify-center mb-4">
-                            <svg class="w-8 h-8 text-madkrapow-red" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
-                            </svg>
+                    <div class="col-md-4">
+                        <div class="card h-100 shadow-sm">
+                            <div class="card-body text-center">
+                                <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                                    <svg class="svg-icon text-danger w-25" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
+                                    </svg>
+                                </div>
+                                <h3 class="h4 mb-2">Authentic Recipes</h3>
+                                <p class="text-muted">Centuries-old family recipes preserved through generations of Thai culinary tradition.</p>
+                            </div>
                         </div>
-                        <h3 class="text-xl font-semibold text-gray-900 mb-2">Authentic Recipes</h3>
-                        <p class="text-gray-600">Centuries-old family recipes preserved through generations of Thai culinary tradition.</p>
                     </div>
-                    <div class="p-8 bg-white rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300">
-                        <div class="w-16 h-16 bg-madkrapow-red/10 rounded-xl flex items-center justify-center mb-4">
-                            <svg class="w-8 h-8 text-madkrapow-red" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"/>
-                            </svg>
+                    <div class="col-md-4">
+                        <div class="card h-100 shadow-sm">
+                            <div class="card-body text-center">
+                                <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                                    <svg class="svg-icon text-danger w-25" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"/>
+                                    </svg>
+                                </div>
+                                <h3 class="h4 mb-2">Sustainable Sourcing</h3>
+                                <p class="text-muted">Ethically sourced ingredients supporting local farmers and communities.</p>
+                            </div>
                         </div>
-                        <h3 class="text-xl font-semibold text-gray-900 mb-2">Sustainable Sourcing</h3>
-                        <p class="text-gray-600">Ethically sourced ingredients supporting local farmers and communities.</p>
                     </div>
                 </div>
             </div>
         </section>
 
         {{-- Team Section --}}
-        <section class="py-16">
-            <div class="max-w-7xl mx-auto px-4">
-                <div class="text-center mb-14">
-                    <h2 class="text-3xl font-bold text-gray-900 mb-4">Culinary Artists</h2>
-                    <p class="text-gray-600 max-w-2xl mx-auto">Meet the passionate team behind Madkrapow's authentic flavors</p>
+        <section class="py-5">
+            <div class="container">
+                <div class="text-center mb-5">
+                    <h2 class="h2 mb-3">Culinary Artists</h2>
+                    <p class="text-muted mx-auto" style="max-width: 600px">Meet the passionate team behind Madkrapow's authentic flavors</p>
                 </div>
-                <div class="grid md:grid-cols-3 gap-8">
-                    <div class="group relative">
-                        <div class="aspect-square overflow-hidden rounded-2xl shadow-lg mb-6">
-                            <img src="{{ asset('images/chef1.jpg') }}" alt="Head Chef"
-                                 class="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-300">
-                        </div>
+                <div class="row g-4">
+                    <div class="col-md-4">
+                        <div class="card border-0 shadow-sm h-100">
+                            <div class="ratio ratio-16x9">
+                                <img src="{{ asset('images/chef1.jpg') }}" alt="Head Chef"
+                                     class="card-img-top object-fit-cover">
+                            </div>
                         <h3 class="text-xl font-bold text-gray-900 text-center">Somchai P.</h3>
                         <p class="text-madkrapow-red text-center mb-2">Master Chef</p>
                         <div class="flex justify-center space-x-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
@@ -120,9 +133,9 @@
         </section>
 
         {{-- CTA Section --}}
-        <section class="bg-madkrapow-red/10 p-6 rounded-lg text-center">
-            <h2 class="text-2xl font-semibold text-gray-700 mb-4">Have Questions?</h2>
-            <a href="{{ route('contact') }}" class="inline-block bg-madkrapow-red text-white px-6 py-3 rounded-lg hover:bg-red-700 transition-colors">
+        <section class="bg-danger bg-opacity-10 p-5 text-center rounded-3 my-5">
+            <h2 class="h4 mb-4">Have Questions?</h2>
+            <a href="{{ route('contact') }}" class="btn btn-danger btn-lg px-5">
                 Contact Us
             </a>
         </section>
