@@ -106,7 +106,7 @@
                                 <div class="position-relative">
                                     <a href="{{ route('products.show', $product->product_id) }}">
                                         @if($product->image_path)
-                                            <img src="{{ asset('storage/' . $product->image_path) }}" class="card-img-top" alt="{{ $product->product_name }}">
+                                            <img src="{{ asset('/' . $product->image_path) }}" class="card-img-top" alt="{{ $product->product_name }}">
                                         @else
                                             <img src="/pesmadkrapow.png" class="card-img-top" alt="{{ $product->product_name }}">
                                         @endif
