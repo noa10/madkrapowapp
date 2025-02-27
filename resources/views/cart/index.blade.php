@@ -53,7 +53,7 @@
                                             </td>
                                             <td>RM {{ number_format($item->product->price, 2) }}</td>
                                             <td>
-<form action="{{ route('cart.update', ['id' => $item->cart_item_id]) }}" method="POST" class="d-flex align-items-center quantity-form">
+<form action="{{ route('cart.update', ['cartItemId' => $item->cart_item_id]) }}" method="POST" class="d-flex align-items-center quantity-form">
     @csrf
     @method('PUT')
     <input type="hidden" name="cart_item_id" value="{{ $item->cart_item_id }}">

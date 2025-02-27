@@ -25,7 +25,7 @@
                 <div class="card-body">
                     <div class="d-flex flex-wrap justify-content-between align-items-center">
                         <div class="mb-2 mb-md-0">
-                            <span class="text-muted">Showing {{ $products->firstItem() ?? 0 }} - {{ $products->lastItem() ?? 0 }} of {{ $products->total() ?? 0 }} products</span>
+                            <span class="text-muted">Showing {{ $products->firstItem() }} to {{ $products->lastItem() }} of {{ $products->total() }} products</span>
                         </div>
                         
                         <div class="d-flex align-items-center">

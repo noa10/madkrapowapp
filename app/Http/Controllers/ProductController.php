@@ -18,8 +18,9 @@ class ProductController extends Controller
      */
     public function index()
     {
-        $products = MadkrapowProduct::all();
-        return view('products.index', compact('products'));
+        $products = MadkrapowProduct::paginate(10);
+        $categories = \App\Models\MadkrapowCategory::withCount('products')->get();
+        return view('products.index', compact('products', 'categories'));
     }
 
     /**
