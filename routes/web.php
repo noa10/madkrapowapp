@@ -103,3 +103,9 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('/reviews', [ReviewController::class, 'adminIndex'])->name('reviews.index');
     Route::delete('/reviews/{id}', [ReviewController::class, 'adminDestroy'])->name('reviews.destroy');
 });
+
+// Xdebug test route
+Route::get('/xdebug-test', function() {
+    xdebug_break();
+    return phpinfo();
+});

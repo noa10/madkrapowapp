@@ -23,19 +23,23 @@ jobs:
           node-version: '20'
           cache: 'npm'
 
-      - name: Install Dependencies
-        run: npm ci
+      - name: Setup PHP with Laravel Sail
+        run: |
+          docker-compose up -d
+          docker-compose exec -T laravel.test composer install -q --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist
+          docker-compose exec -T laravel.test npm ci
 
-      - name: Build
-        run: npm run build
+      - name: Build Assets
+        run: docker-compose exec -T laravel.test npm run build
 
-      - name: Export
-        run: npm run export
+      - name: Export Static Files
+        run: docker-compose exec -T laravel.test npm run export
 
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./out
+          publish_dir: ./dist
           destination_dir: .
+          allow_empty_commit: false
           keep_files: false
