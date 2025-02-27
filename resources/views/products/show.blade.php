@@ -18,7 +18,7 @@
         <!-- Product Image -->
         <div class="col-md-6 mb-4 mb-md-0">
             <div class="position-relative">
-        <img src="{{ $product->image_path ? asset('storage/' . $product->image_path) : asset('images/madkrapow.png') }}" 
+        <img src="{{ $product->image_path ? asset('/' . $product->image_path) : asset('images/madkrapow.png') }}" 
              class="img-fluid rounded" 
              alt="{{ $product->product_name }}" 
              loading="lazy">

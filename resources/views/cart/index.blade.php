@@ -42,7 +42,7 @@
                                         <tr>
                                             <td>
                                                 <a href="{{ route('products.show', $item->product->product_id) }}">
-                                                    <img src="{{ $item->product->image_path ? asset('storage/' . $item->product->image_path) : '/pesmadkrapow.png' }}" 
+                                                    <img src="{{ $item->product->image_path ? asset('/' . $item->product->image_path) : '/pesmadkrapow.png' }}" 
                                                         class="img-thumbnail" alt="{{ $item->product->product_name }}" style="width: 80px; height: 80px; object-fit: cover;">
                                                 </a>
                                             </td>
@@ -197,7 +197,7 @@
                         <div class="col-md-3 col-6 mb-4">
                             <div class="card h-100 product-card">
                                 <a href="{{ route('products.show', $product->product_id) }}">
-                                    <img src="{{ $product->image_path ? asset('storage/' . $product->image_path) : '/pesmadkrapow.png' }}" class="card-img-top" alt="{{ $product->product_name }}">
+                                    <img src="{{ $product->image_path ? asset('/' . $product->image_path) : '/pesmadkrapow.png' }}" class="card-img-top" alt="{{ $product->product_name }}">
                                 </a>
                                 <div class="card-body d-flex flex-column">
                                     <h5 class="card-title">
