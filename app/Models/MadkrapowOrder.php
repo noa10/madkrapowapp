@@ -9,8 +9,21 @@ class MadkrapowOrder extends Model
 {
     use HasFactory;
 
-    protected $table = 'madkrapow_order';
-    protected $primaryKey = 'order_id';
+    protected $table = 'madkrapow_orders';
+    protected $primaryKey = 'order_id'; // Changed from 'id' to 'order_id'
+    /**
+     * Indicates if the model's ID is auto-incrementing.
+     *
+     * @var bool
+     */
+    public $incrementing = true;
+
+    /**
+     * The data type of the auto-incrementing ID.
+     *
+     * @var string
+     */
+    protected $keyType = 'int';
 
     /**
      * The attributes that are mass assignable.
@@ -19,9 +32,10 @@ class MadkrapowOrder extends Model
      */
     protected $fillable = [
         'user_id',
+        'order_date',
         'total_amount',
         'status',
-        'date_modified',
+        'shipping_cost',
     ];
 
     /**
@@ -31,7 +45,8 @@ class MadkrapowOrder extends Model
      */
     protected $casts = [
         'total_amount' => 'decimal:2',
-        'date_modified' => 'datetime',
+        'shipping_cost' => 'decimal:2',
+        'order_date' => 'datetime',
     ];
 
     /**
@@ -47,7 +62,7 @@ class MadkrapowOrder extends Model
      */
     public function orderItems()
     {
-        return $this->hasMany(MadkrapowOrderItem::class, 'order_id', 'order_id');
+        return $this->hasMany(MadkrapowOrderItem::class, 'order_id', 'order_id'); // Changed from 'id' to 'order_id'
     }
 
     /**
@@ -55,7 +70,7 @@ class MadkrapowOrder extends Model
      */
     public function shipping()
     {
-        return $this->hasOne(MadkrapowShipping::class, 'order_id', 'order_id');
+        return $this->hasOne(MadkrapowShipping::class, 'order_id', 'order_id'); // Changed from 'id' to 'order_id'
     }
 
     /**
@@ -63,6 +78,6 @@ class MadkrapowOrder extends Model
      */
     public function payment()
     {
-        return $this->hasOne(MadkrapowPayment::class, 'order_id', 'order_id');
+        return $this->hasOne(MadkrapowPayment::class, 'order_id', 'order_id'); // Changed from 'id' to 'order_id'
     }
 }

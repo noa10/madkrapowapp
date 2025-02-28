@@ -9,7 +9,7 @@ class MadkrapowPayment extends Model
 {
     use HasFactory;
 
-    protected $table = 'madkrapow_payment';
+    protected $table = 'madkrapow_payments';
     protected $primaryKey = 'payment_id';
 
     /**

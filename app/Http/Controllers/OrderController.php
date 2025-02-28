@@ -32,16 +32,19 @@ class OrderController extends Controller
      * @param  string  $id
      * @return \Illuminate\Http\Response
      */
+    // Find the show method in your OrderController and modify it to include the shipping cost
     public function show($id)
     {
-        $order = MadkrapowOrder::where('order_id', $id)
+        $order = MadkrapowOrder::with(['user', 'orderItems.product', 'shipping', 'payment'])
+            ->where('order_id', $id)
             ->where('user_id', Auth::id())
-            ->with(['orderItems.product', 'shipping', 'payment'])
             ->firstOrFail();
-
-        return view('orders.show', compact('order'));
+        
+        // Add this line to get the shipping cost from the order
+        $shippingCost = $order->shipping_cost ?? 0;
+        
+        return view('orders.show', compact('order', 'shippingCost'));
     }
-
     /**
      * Display the order tracking page
      *

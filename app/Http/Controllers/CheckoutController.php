@@ -19,115 +19,50 @@ class CheckoutController extends Controller
     protected $expressShippingFee = 20.00;
     protected $freeShippingThreshold = 100.00;
 
-    /**
-     * Display the checkout page
-     *
-     * @return \Illuminate\Http\Response
-     */
     public function index()
     {
-        // Check if user is authenticated
-        if (!Auth::check()) {
-            return redirect()->route('login')->with('error', 'Please login to proceed with checkout');
-        }
-
-        // Get cart items for the current user
         $cartItems = MadkrapowCartItem::where('user_id', Auth::id())
             ->with('product')
             ->get();
-
-        // If cart is empty, redirect to cart page
-        if ($cartItems->isEmpty()) {
-            return redirect()->route('cart.index')->with('error', 'Your cart is empty');
-        }
-
-        // Calculate subtotal
-        $subtotal = 0;
-        foreach ($cartItems as $item) {
-            $subtotal += $item->product->price * $item->quantity;
-        }
-
-        return view('checkout.index', [
-            'cartItems' => $cartItems,
-            'subtotal' => $subtotal,
-            'shippingFee' => $this->standardShippingFee,
-            'expressShippingFee' => $this->expressShippingFee
+    
+        $subtotal = $cartItems->sum(function ($item) {
+            return $item->product->price * $item->quantity;
+        });
+    
+        $standardShippingFee = $this->standardShippingFee;
+        $expressShippingFee = $this->expressShippingFee;
+        
+        // Determine shipping cost based on free shipping threshold
+        $shippingCost = ($subtotal >= $this->freeShippingThreshold) ? 0 : $standardShippingFee;
+        $totalAmount = $subtotal + $shippingCost;
+        
+        \Stripe\Stripe::setApiKey(config('services.stripe.secret'));
+        $paymentIntent = \Stripe\PaymentIntent::create([
+            'amount' => $totalAmount * 100, // amount in cents
+            'currency' => 'myr',
+            'payment_method_types' => ['card'],
+            // Remove the return_url since we're not confirming the payment yet
         ]);
+        $clientSecret = $paymentIntent->client_secret;
+        
+        // Add shippingFee to the view data
+        return view('checkout.index', compact('subtotal', 'standardShippingFee', 'expressShippingFee', 'clientSecret'));
     }
 
-    /**
-     * Process the checkout
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
     public function process(Request $request)
     {
-        // Validate the request
-        $request->validate([
-            'payment_method' => 'required|in:credit_card,online_banking,e_wallet',
-            'shipping_method' => 'required|in:standard,express',
-            'terms_agree' => 'required|accepted',
-        ]);
-
-        // If using credit card, validate card details
-        if ($request->payment_method === 'credit_card') {
-            $request->validate([
-                'card_number' => 'required|string|min:16|max:19',
-                'expiry_date' => 'required|string|regex:/^(0[1-9]|1[0-2])\/([0-9]{2})$/',
-                'cvv' => 'required|string|min:3|max:4',
-                'card_name' => 'required|string|max:255',
-            ]);
-        }
-
-        // If not using profile address, validate shipping details
-        if (!$request->has('use_profile_address')) {
-            $request->validate([
-                'first_name' => 'required|string|max:255',
-                'last_name' => 'required|string|max:255',
-                'email' => 'required|email|max:255',
-                'phone' => 'required|string|max:20',
-                'address' => 'required|string|max:255',
-                'city' => 'required|string|max:255',
-                'postal_code' => 'required|string|max:10',
-                'state' => 'required|string|max:255',
-            ]);
-        }
-
-        // Get cart items for the current user
         $cartItems = MadkrapowCartItem::where('user_id', Auth::id())
             ->with('product')
             ->get();
 
-        // If cart is empty, redirect to cart page
-        if ($cartItems->isEmpty()) {
-            return redirect()->route('cart.index')->with('error', 'Your cart is empty');
-        }
+        $subtotal = $cartItems->sum(function ($item) {
+            return $item->product->price * $item->quantity;
+        });
 
-        // Calculate subtotal
-        $subtotal = 0;
-        foreach ($cartItems as $item) {
-            // Check if product is in stock
-            if ($item->product->stock_quantity < $item->quantity) {
-                return redirect()->route('checkout.index')->with('error', 'Sorry, ' . $item->product->product_name . ' is out of stock or has insufficient quantity.');
-            }
-            
-            $subtotal += $item->product->price * $item->quantity;
-        }
+        $shippingCost = $request->shipping_method === 'express' ? $this->expressShippingFee : $this->standardShippingFee;
 
-        // Calculate shipping cost
-        $shippingCost = 0;
-        if ($request->shipping_method === 'express') {
-            $shippingCost = $this->expressShippingFee;
-        } else {
-            // Standard shipping is free if subtotal is above threshold
-            $shippingCost = $subtotal >= $this->freeShippingThreshold ? 0 : $this->standardShippingFee;
-        }
-
-        // Calculate total amount
         $totalAmount = $subtotal + $shippingCost;
 
-        // Start a database transaction
         DB::beginTransaction();
 
         try {
@@ -137,52 +72,117 @@ class CheckoutController extends Controller
             $order->order_date = Carbon::now();
             $order->total_amount = $totalAmount;
             $order->status = 'pending';
-            $order->save();
-
-            // Create shipping record
-            $shipping = new MadkrapowShipping();
-            $shipping->shipping_id = $order->order_id; // Use order_id as shipping_id
-            $shipping->order_id = $order->order_id;
             
-            // Set shipping address
-            if ($request->has('use_profile_address')) {
+            // Store calculated shipping cost
+            $order->shipping_cost = $shippingCost;
+            if (!$order->save()) {
+                throw new \Exception('Order not saved successfully. Validation: ' . json_encode($order->getErrors()));
+            }
+
+            \Log::info('Order created with ID: ' . $order->order_id); // Changed from $order->id to $order->order_id
+
+            // Create shipping record with address details
+            $shipping = new MadkrapowShipping();
+            $shipping->order_id = $order->order_id; // Changed from $order->id to $order->order_id
+            
+            // Check if using profile address
+            if ($request->has('use_profile_address') && $request->use_profile_address == 1) {
                 $user = Auth::user();
-                $shipping->shipping_address = $user->address;
-                // You might need to split the address into components or store the full address
-                // This depends on how your user address is structured
+                // Split the address into components or use appropriate fields from user profile
+                $addressParts = explode("\n", $user->address);
+                $shipping->address_line1 = $addressParts[0] ?? '';
+                $shipping->address_line2 = isset($addressParts[1]) ? $addressParts[1] : '';
+                // You may need to adjust these based on how user address is stored
+                $shipping->city = $user->city ?? '';
+                $shipping->state = $user->state ?? '';
+                $shipping->postal_code = $user->postal_code ?? '';
+                $shipping->country = 'Malaysia'; // Default country
             } else {
-                $shipping->shipping_address = $request->address . ', ' . $request->city . ', ' . $request->postal_code . ', ' . $request->state . ', Malaysia';
+                // Use form submitted address
+                $shipping->address_line1 = $request->input('address');
+                $shipping->address_line2 = ''; // Optional field
+                $shipping->city = $request->input('city');
+                $shipping->state = $request->input('state');
+                $shipping->postal_code = $request->input('postal_code');
+                $shipping->country = 'Malaysia'; // Default country
             }
             
-            $shipping->shipping_date = Carbon::now();
+            // Add delivery method
             $shipping->delivery_method = $request->shipping_method;
-            $shipping->status = 'processing';
-            $shipping->save();
+            
+            if (!$shipping->save()) {
+                throw new \Exception('Shipping info not saved: ' . json_encode($shipping->getErrors()));
+            }
 
-            // Create payment record
-            $payment = new MadkrapowPayment();
-            $payment->payment_id = $order->order_id; // Use order_id as payment_id
-            $payment->order_id = $order->order_id;
-            $payment->payment_date = Carbon::now();
-            $payment->amount = $totalAmount;
-            $payment->payment_method = $request->payment_method;
-            $payment->status = 'completed'; // Assuming payment is successful immediately
+            // Process Stripe payment
+            \Stripe\Stripe::setApiKey(config('services.stripe.secret'));
+            
+            // Handle different payment methods
+            if ($request->payment_method === 'credit_card') {
+                // Check if we have a payment method from the request
+                if (!$request->has('stripePaymentMethod')) {
+                    throw new \Exception('No payment method provided');
+                }
+                
+                $paymentIntent = \Stripe\PaymentIntent::create([
+                    'amount' => $totalAmount * 100, // Convert to cents
+                    'currency' => 'myr',
+                    'payment_method' => $request->stripePaymentMethod,
+                    'confirmation_method' => 'manual',
+                    'confirm' => true,
+                    'return_url' => route('checkout.confirmation', ['id' => $order->order_id]), // Changed from $order->id
+                    'metadata' => [
+                        'order_id' => $order->order_id, // Changed from $order->id
+                        'user_id' => Auth::id()
+                    ]
+                ]);
+
+                if ($paymentIntent->status !== 'succeeded') {
+                    throw new \Exception('Payment failed: ' . $paymentIntent->last_payment_error->message);
+                }
+
+                // Create payment record with Stripe reference (around line 144-145)
+                $payment = new MadkrapowPayment();
+                $payment->order_id = $order->order_id; // Changed from $order->id
+                $payment->payment_date = Carbon::now();
+                $payment->amount = $totalAmount;
+                $payment->payment_method = 'stripe';
+                $payment->stripe_payment_id = $paymentIntent->id;
+                $payment->status = 'completed';
+            } else if ($request->payment_method === 'online_banking') {
+                // For online banking, we'll create a pending payment that will be updated later
+                $payment = new MadkrapowPayment();
+                $payment->order_id = $order->order_id; // Changed from $order->id
+                $payment->payment_date = null; // Will be set when payment is confirmed
+                $payment->amount = $totalAmount;
+                $payment->payment_method = 'bank_transfer';
+                $payment->status = 'pending';
+            } else {
+                throw new \Exception('Invalid payment method');
+            }
+            
             $payment->save();
 
-            // Create order items and update product stock
+            // Create order items and update product stock atomically
             foreach ($cartItems as $item) {
                 $orderItem = new MadkrapowOrderItem();
-                $orderItem->order_item_id = uniqid('item_'); // Generate a unique ID
-                $orderItem->order_id = $order->order_id;
+                $orderItem->order_id = $order->order_id; // Changed from $order->id
                 $orderItem->product_id = $item->product_id;
                 $orderItem->quantity = $item->quantity;
                 $orderItem->price_at_purchase = $item->product->price;
                 $orderItem->save();
 
-                // Update product stock
+                // Atomic stock decrement
+                // Find where the product stock is being updated, likely in the process method
+                // Change this:
                 $product = MadkrapowProduct::find($item->product_id);
-                $product->stock_quantity -= $item->quantity;
-                $product->save();
+                $product->decrement('stock_quantity', $item->quantity);
+                
+                // To this:
+                $product = MadkrapowProduct::where('product_id', $item->product_id)->first();
+                if ($product) {
+                    $product->decrement('stock_quantity', $item->quantity);
+                }
             }
 
             // Clear the user's cart
@@ -191,51 +191,26 @@ class CheckoutController extends Controller
             // Commit the transaction
             DB::commit();
 
-            // Redirect to confirmation page
-            return redirect()->route('checkout.confirmation', ['order_id' => $order->order_id]);
+            // At the end of the try block (around line 196)
+            return redirect()->route('checkout.confirmation', ['id' => $order->order_id]); // Changed from $order->id
         } catch (\Exception $e) {
-            // Rollback the transaction if something goes wrong
             DB::rollback();
-            
-            // Log the error
             \Log::error('Checkout error: ' . $e->getMessage());
-            
-            // Redirect back with error
-            return redirect()->route('checkout.index')->with('error', 'An error occurred during checkout. Please try again.');
+            return redirect()->route('checkout.index')->with('error', 'Checkout failed: ' . $e->getMessage());
         }
     }
 
-    /**
-     * Display the order confirmation page
-     *
-     * @param  string  $order_id
-     * @return \Illuminate\Http\Response
-     */
-    public function confirmation($order_id)
+    public function confirmation($id)
     {
-        // Get the order with related data
         $order = MadkrapowOrder::with(['user', 'orderItems.product', 'shipping', 'payment'])
-            ->where('order_id', $order_id)
-            ->where('user_id', Auth::id()) // Ensure the order belongs to the current user
+            ->where('order_id', $id) // Changed from 'id' to 'order_id'
+            ->where('user_id', Auth::id())
             ->firstOrFail();
-
-        // Calculate shipping cost
-        $shippingCost = 0;
-        if ($order->shipping->delivery_method === 'express') {
-            $shippingCost = $this->expressShippingFee;
-        } else {
-            // Calculate subtotal to determine if shipping was free
-            $subtotal = 0;
-            foreach ($order->orderItems as $item) {
-                $subtotal += $item->price_at_purchase * $item->quantity;
-            }
-            
-            $shippingCost = $subtotal >= $this->freeShippingThreshold ? 0 : $this->standardShippingFee;
-        }
-
+    
+        // Use stored shipping cost instead of recalculating
         return view('checkout.confirmation', [
             'order' => $order,
-            'shippingCost' => $shippingCost
+            'shippingCost' => $order->shipping_cost
         ]);
     }
 }

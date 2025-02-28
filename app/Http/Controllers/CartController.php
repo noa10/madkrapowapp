@@ -25,7 +25,9 @@ class CartController extends Controller
             return $item->quantity * $item->product->price;
         });
         
-        return view('cart.index', compact('cartItems', 'subtotal'));
+        $shippingFee = $subtotal >= 100 ? 0 : 10.00;
+        
+        return view('cart.index', compact('cartItems', 'subtotal', 'shippingFee'));
     }
 
     /**
@@ -37,7 +39,7 @@ class CartController extends Controller
     public function addToCart(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'product_id' => 'required|exists:madkrapow_product,product_id',
+            'product_id' => 'required|exists:madkrapow_products,product_id',
             'quantity' => 'required|integer|min:1',
         ]);
 

@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('madkrapow_payment', function (Blueprint $table) {
+        Schema::create('madkrapow_payments', function (Blueprint $table) {
             $table->id('payment_id');
             $table->unsignedBigInteger('order_id');
             $table->timestamp('payment_date')->nullable();
@@ -20,7 +20,7 @@ return new class extends Migration
             $table->string('status')->default('pending');
             $table->timestamps();
 
-            $table->foreign('order_id')->references('order_id')->on('madkrapow_order')->onDelete('cascade');
+            $table->foreign('order_id')->references('order_id')->on('madkrapow_orders')->onDelete('cascade');
         });
     }
 
@@ -29,6 +29,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('madkrapow_payment');
+        Schema::dropIfExists('madkrapow_payments');
     }
 };

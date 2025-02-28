@@ -33,7 +33,8 @@
                         </div>
                     </div>
                     
-                    <form action="{{ route('reviews.store') }}" method="POST">
+                    <!-- Change this line -->
+                    <form action="{{ route('reviews.store', ['productId' => $product->product_id]) }}" method="POST">
                         @csrf
                         <input type="hidden" name="product_id" value="{{ $product->product_id }}">
                         

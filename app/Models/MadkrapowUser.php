@@ -11,7 +11,7 @@ class MadkrapowUser extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable;
 
-    protected $table = 'madkrapow_user';
+    protected $table = 'madkrapow_users';
     protected $primaryKey = 'user_id';
 
     /**

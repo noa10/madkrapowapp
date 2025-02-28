@@ -71,9 +71,9 @@
                                             </td>
                                             <td class="fw-bold item-total">RM {{ number_format($item->product->price * $item->quantity, 2) }}</td>
                                             <td>
-                                                <form action="{{ route('cart.remove', ['cartItemId' => $item->cart_item_id]) }}" method="POST" class="d-inline">
+                                                <form action="{{ route('cart.remove', $item->cart_item_id) }}" method="POST" class="d-inline">
                                                     @csrf
-                                                    <input type="hidden" name="cart_item_id" value="{{ $item->cart_item_id }}">
+                                                    @method('DELETE')
                                                     <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Are you sure you want to remove this item?')">
                                                         <i class="bi bi-trash"></i>
                                                     </button>
@@ -94,6 +94,7 @@
                     
                     <form action="{{ route('cart.clear') }}" method="POST">
                         @csrf
+                        @method('DELETE')
                         <button type="submit" class="btn btn-outline-danger" onclick="return confirm('Are you sure you want to clear your cart?')">
                             <i class="bi bi-trash me-2"></i> Clear Cart
                         </button>

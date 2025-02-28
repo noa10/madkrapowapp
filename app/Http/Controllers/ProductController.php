@@ -32,11 +32,11 @@ class ProductController extends Controller
     public function show($id)
     {
         $product = MadkrapowProduct::select('product_id', 'product_name', 'description', 'price', 'stock_quantity', 'image_path')
-            ->with(['reviews.madkrapowUser'])
+            ->with(['reviews.user'])  // Changed from reviews.madkrapowUser to reviews.user
             ->withCount('reviews')
             ->withAvg('reviews', 'rating')
             ->findOrFail($id);
-
+    
         return view('products.show', [
             'product' => $product,
             'reviews' => $product->reviews()->paginate(5)

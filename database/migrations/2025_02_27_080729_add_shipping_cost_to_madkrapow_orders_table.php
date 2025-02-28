@@ -11,11 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('madkrapow_products', function (Blueprint $table) {
-            $table->foreignId('category_id')
-                ->nullable()
-                ->constrained('madkrapow_categories')
-                ->onDelete('set null');
+        Schema::table('madkrapow_orders', function (Blueprint $table) {
+            $table->decimal('shipping_cost', 8, 2)->nullable();
         });
     }
 
@@ -24,8 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('madkrapow_products', function (Blueprint $table) {
-            //
+        Schema::table('madkrapow_orders', function (Blueprint $table) {
+            $table->dropColumn('shipping_cost');
         });
     }
 };

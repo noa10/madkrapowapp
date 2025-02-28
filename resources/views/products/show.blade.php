@@ -219,10 +219,10 @@
                                             <div class="d-flex justify-content-between align-items-center mb-3">
                                                 <div class="d-flex align-items-center">
                                                     <div class="user-avatar rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-3">
-                                                        <span>{{ substr(optional($review->madkrapowUser)->name ?? 'U', 0, 1) }}</span>
+                                                        <span>{{ substr(optional($review->user)->name ?? 'U', 0, 1) }}</span>
                                                     </div>
                                                     <div>
-                                                        <h6 class="mb-0">{{ $review->madkrapowUser->name ?? 'User' }}</h6>
+                                                        <h6 class="mb-0">{{ $review->user->name ?? 'User' }}</h6>
                                                         <small class="text-muted">{{ isset($review->review_date) ? $review->review_date->format('M d, Y') : date('M d, Y') }}</small>
                                                     </div>
                                                 </div>

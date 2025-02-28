@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('madkrapow_cart_item', function (Blueprint $table) {
+        Schema::create('madkrapow_cart_items', function (Blueprint $table) {
             $table->id('cart_item_id');
             $table->unsignedBigInteger('user_id');
             $table->unsignedBigInteger('product_id');
@@ -19,8 +19,8 @@ return new class extends Migration
             $table->timestamp('added_date')->nullable();
             $table->timestamps();
 
-            $table->foreign('user_id')->references('user_id')->on('madkrapow_user')->onDelete('cascade');
-            $table->foreign('product_id')->references('product_id')->on('madkrapow_product')->onDelete('cascade');
+            $table->foreign('user_id')->references('user_id')->on('madkrapow_users')->onDelete('cascade');
+            $table->foreign('product_id')->references('product_id')->on('madkrapow_products')->onDelete('cascade');
         });
     }
 
@@ -29,6 +29,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('madkrapow_cart_item');
+        Schema::dropIfExists('madkrapow_cart_items');
     }
 };

@@ -9,7 +9,7 @@ class MadkrapowCartItem extends Model
 {
     use HasFactory;
 
-    protected $table = 'madkrapow_cart_item';
+    protected $table = 'madkrapow_cart_items';
     protected $primaryKey = 'cart_item_id';
 
     /**

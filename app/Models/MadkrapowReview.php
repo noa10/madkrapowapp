@@ -9,7 +9,7 @@ class MadkrapowReview extends Model
 {
     use HasFactory;
 
-    protected $table = 'madkrapow_review';
+    protected $table = 'madkrapow_reviews';
     protected $primaryKey = 'review_id';
 
     /**
@@ -40,7 +40,7 @@ class MadkrapowReview extends Model
      */
     public function user()
     {
-        return $this->belongsTo(MadkrapowUser::class, 'user_id', 'user_id');
+        return $this->belongsTo(MadkrapowUser::class, 'user_id');
     }
 
     /**

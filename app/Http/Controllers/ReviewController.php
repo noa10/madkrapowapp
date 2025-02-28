@@ -80,13 +80,12 @@ class ReviewController extends Controller
                 ->with('info', 'You have already reviewed this product. You can edit your review below.');
         }
         
-        $review = new MadkrapowReview();
-        $review->user_id = Auth::id();
-        $review->product_id = $product->product_id;
-        $review->rating = $request->rating;
-        $review->comment = $request->comment;
-        $review->review_date = now();
-        $review->save();
+        auth()->user()->reviews()->create([
+            'product_id' => $product->product_id,
+            'rating' => $request->rating,
+            'comment' => $request->comment,
+            'review_date' => now()
+        ]);
 
         return redirect()->route('products.show', $product->product_id)
             ->with('success', 'Review submitted successfully!');

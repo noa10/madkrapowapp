@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('madkrapow_order', function (Blueprint $table) {
+        Schema::create('madkrapow_orders', function (Blueprint $table) {
             $table->id('order_id');
             $table->unsignedBigInteger('user_id');
             $table->decimal('total_amount', 10, 2);
@@ -19,7 +19,7 @@ return new class extends Migration
             $table->timestamp('date_modified')->nullable();
             $table->timestamps();
 
-            $table->foreign('user_id')->references('user_id')->on('madkrapow_user')->onDelete('cascade');
+            $table->foreign('user_id')->references('user_id')->on('madkrapow_users')->onDelete('cascade');
         });
     }
 
@@ -28,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('madkrapow_order');
+        Schema::dropIfExists('madkrapow_orders');
     }
 };

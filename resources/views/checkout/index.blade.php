@@ -147,7 +147,7 @@
                                                     @if($subtotal >= 100)
                                                         <span class="text-success">Free</span>
                                                     @else
-                                                        <span>RM {{ number_format($shippingFee, 2) }}</span>
+                                                        <span>RM {{ number_format($standardShippingFee, 2) }}</span>
                                                     @endif
                                                 </div>
                                             </div>
@@ -189,43 +189,18 @@
                                                 </div>
                                                 <div>
                                                     <strong>Credit/Debit Card</strong>
-                                                    <p class="text-muted mb-0 small">Visa, Mastercard, American Express</p>
+                                            <p class="text-muted mb-0 small">FPX Online Banking (Maybank, CIMB, Public Bank)</p>
                                                 </div>
                                             </div>
                                         </label>
                                     </div>
                                     
                                     <div id="credit-card-form" class="mt-3 ps-4">
-                                        <div class="mb-3">
-                                            <label for="card_number" class="form-label">Card Number <span class="text-danger">*</span></label>
-                                            <input type="text" class="form-control @error('card_number') is-invalid @enderror" id="card_number" name="card_number" placeholder="1234 5678 9012 3456">
-                                            @error('card_number')
-                                                <div class="invalid-feedback">{{ $message }}</div>
-                                            @enderror
+                                        <div class="alert alert-info">
+                                            <i class="bi bi-shield-lock"></i> Secure payment processing powered by Stripe
                                         </div>
-                                        <div class="row">
-                                            <div class="col-md-6 mb-3">
-                                                <label for="expiry_date" class="form-label">Expiry Date <span class="text-danger">*</span></label>
-                                                <input type="text" class="form-control @error('expiry_date') is-invalid @enderror" id="expiry_date" name="expiry_date" placeholder="MM/YY">
-                                                @error('expiry_date')
-                                                    <div class="invalid-feedback">{{ $message }}</div>
-                                                @enderror
-                                            </div>
-                                            <div class="col-md-6 mb-3">
-                                                <label for="cvv" class="form-label">CVV <span class="text-danger">*</span></label>
-                                                <input type="text" class="form-control @error('cvv') is-invalid @enderror" id="cvv" name="cvv" placeholder="123">
-                                                @error('cvv')
-                                                    <div class="invalid-feedback">{{ $message }}</div>
-                                                @enderror
-                                            </div>
-                                        </div>
-                                        <div class="mb-3">
-                                            <label for="card_name" class="form-label">Name on Card <span class="text-danger">*</span></label>
-                                            <input type="text" class="form-control @error('card_name') is-invalid @enderror" id="card_name" name="card_name">
-                                            @error('card_name')
-                                                <div class="invalid-feedback">{{ $message }}</div>
-                                            @enderror
-                                        </div>
+                                        <div id="card-element" class="form-control"></div>
+                        <div id="card-errors" role="alert" class="invalid-feedback mt-2" style="display: none;"></div>
                                     </div>
                                 </div>
                             </div>
@@ -241,4 +216,76 @@
                                                 </div>
                                                 <div>
                                                     <strong>Online Banking</strong>
-                                                    <p
+                                            <p class="text-muted mb-0 small">Instant bank redirect (FPX)</p>
+                                                </div>
+                                            </div>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg" id="submit-btn">
+                                <span class="submit-text">Complete Purchase</span>
+                                <div class="spinner-border spinner-border-sm d-none" role="status" id="spinner">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                            </button>
+                        </div>
+                    </form>
+                    </div>
+                    <div class="col-lg-4">
+                        <div class="card mb-4">
+                            <div class="card-header bg-primary text-white">
+                                <h5 class="mb-0">Order Summary</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between mb-3">
+                                    <span>Subtotal</span>
+                                    <span class="fw-bold" id="subtotal">RM {{ number_format($subtotal, 2) }}</span>
+                                </div>
+                                
+                                <div class="d-flex justify-content-between mb-3">
+                                    <span>Shipping</span>
+                                    <span id="shipping-cost">
+                                        @if($subtotal >= 100)
+                                            <span class="text-success">Free</span>
+                                        @else
+                                            RM {{ number_format($standardShippingFee, 2) }}
+                                        @endif
+                                    </span>
+                                </div>
+                                
+                                <hr>
+                                
+                                <div class="d-flex justify-content-between mb-3">
+                                    <span class="fw-bold">Total</span>
+                                    <span class="fw-bold fs-5" id="total-amount">
+                                        RM {{ number_format($subtotal + ($subtotal >= 100 ? 0 : $standardShippingFee), 2) }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title">Secure Checkout</h5>
+                                <p class="small text-muted mb-0">
+                                    <i class="bi bi-shield-lock me-1"></i> Your payment information is secure
+                                </p>
+                                <hr>
+                                <div class="d-flex gap-2 justify-content-center">
+                                    <i class="bi bi-credit-card fs-3 text-muted"></i>
+                                    <i class="bi bi-paypal fs-3 text-muted"></i>
+                                    <i class="bi bi-bank fs-3 text-muted"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@endsection

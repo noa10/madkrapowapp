@@ -9,7 +9,7 @@ class MadkrapowOrderItem extends Model
 {
     use HasFactory;
 
-    protected $table = 'madkrapow_order_item';
+    protected $table = 'madkrapow_order_items';
     protected $primaryKey = 'order_item_id';
 
     /**

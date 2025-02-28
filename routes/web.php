@@ -62,6 +62,7 @@ Route::middleware(['auth'])->group(function () {
     
     // Cart routes
     Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
+    Route::post('/cart', [CartController::class, 'addToCart'])->name('cart.store');
     Route::post('/cart/add', [CartController::class, 'addToCart'])->name('cart.add');
     Route::match(['put', 'post'], '/cart/{cartItemId}', [CartController::class, 'updateQuantity'])->name('cart.update');
     Route::delete('/cart/{cartItemId}', [CartController::class, 'removeItem'])->name('cart.remove');
@@ -71,7 +72,7 @@ Route::middleware(['auth'])->group(function () {
     // Checkout routes
     Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
     Route::post('/checkout', [CheckoutController::class, 'process'])->name('checkout.process');
-    Route::get('/checkout/confirmation/{order_id}', [CheckoutController::class, 'confirmation'])->name('checkout.confirmation');
+    Route::get('/checkout/confirmation/{id}', [CheckoutController::class, 'confirmation'])->name('checkout.confirmation');
     
     // Order routes
     Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');

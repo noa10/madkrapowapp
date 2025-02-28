@@ -9,7 +9,7 @@ class MadkrapowShipping extends Model
 {
     use HasFactory;
 
-    protected $table = 'madkrapow_shipping';
+    protected $table = 'madkrapow_shippings';
     protected $primaryKey = 'shipping_id';
 
     /**

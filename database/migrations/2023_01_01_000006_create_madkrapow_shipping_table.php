@@ -11,16 +11,21 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('madkrapow_shipping', function (Blueprint $table) {
+        Schema::create('madkrapow_shippings', function (Blueprint $table) {
             $table->id('shipping_id');
             $table->unsignedBigInteger('order_id');
             $table->timestamp('shipping_date')->nullable();
             $table->string('delivery_method');
             $table->string('status')->default('pending');
-            $table->text('shipping_address');
+            $table->string('address_line1')->nullable();
+            $table->string('address_line2')->nullable();
+            $table->string('city');
+            $table->string('state');
+            $table->string('postal_code');
+            $table->string('country');
             $table->timestamps();
 
-            $table->foreign('order_id')->references('order_id')->on('madkrapow_order')->onDelete('cascade');
+            $table->foreign('order_id')->references('order_id')->on('madkrapow_orders')->onDelete('cascade');
         });
     }
 
@@ -29,6 +34,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('madkrapow_shipping');
+        Schema::dropIfExists('madkrapow_shippings');
     }
 };

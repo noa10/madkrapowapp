@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('madkrapow_order_item', function (Blueprint $table) {
+        Schema::create('madkrapow_order_items', function (Blueprint $table) {
             $table->id('order_item_id');
             $table->unsignedBigInteger('order_id');
             $table->unsignedBigInteger('product_id');
@@ -19,8 +19,8 @@ return new class extends Migration
             $table->decimal('price_at_purchase', 10, 2);
             $table->timestamps();
 
-            $table->foreign('order_id')->references('order_id')->on('madkrapow_order')->onDelete('cascade');
-            $table->foreign('product_id')->references('product_id')->on('madkrapow_product')->onDelete('cascade');
+            $table->foreign('order_id')->references('order_id')->on('madkrapow_orders')->onDelete('cascade');
+            $table->foreign('product_id')->references('product_id')->on('madkrapow_products')->onDelete('cascade');
         });
     }
 
@@ -29,6 +29,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('madkrapow_order_item');
+        Schema::dropIfExists('madkrapow_order_items');
     }
 };
