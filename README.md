@@ -30,6 +30,12 @@ docker system prune -a --volumes --force
 
 # Start containers in detached mode
 ./vendor/bin/sail up -d
+
+# Run migrations
+./vendor/bin/sail artisan migrate
+
+# Run migrations with data
+./vendor/bin/sail artisan migrate:refresh --seed
 ```
 
 #### Fix Corrupted Dockerfile
