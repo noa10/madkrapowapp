@@ -16,6 +16,15 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'  # Changed from 8.4 to 8.2 as 8.4 is not yet stable
+          extensions: mbstring, xml, ctype, iconv, intl, pdo_mysql, dom, filter, json
+          coverage: none
 
       - name: Setup Node.js
         uses: actions/setup-node@v3
@@ -23,20 +32,29 @@ jobs:
           node-version: '20'
           cache: 'npm'
 
-      - name: Setup PHP with Laravel Sail
-        run: |
-          docker-compose up -d
-          docker-compose exec -T laravel.test composer install -q --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist
-          docker-compose exec -T laravel.test npm ci
+      - name: Copy .env
+        run: php -r "file_exists('.env') || copy('.env.example', '.env');"
+
+      - name: Update Composer Dependencies
+        run: composer update --no-interaction --no-progress
+
+      - name: Install Composer Dependencies
+        run: composer install -q --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist
+
+      - name: Generate key
+        run: php artisan key:generate
+
+      - name: Install NPM Dependencies
+        run: npm ci
 
       - name: Build Assets
-        run: docker-compose exec -T laravel.test npm run build
+        run: npm run build
 
       - name: Export Static Files
-        run: docker-compose exec -T laravel.test npm run export
+        run: npm run export
 
       - name: Deploy
-        uses: peaceiris/actions-gh-pages@v4
+        uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./dist
