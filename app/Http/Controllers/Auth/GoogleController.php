@@ -3,9 +3,10 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
+use App\Models\MadkrapowUser;
 use Exception;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Laravel\Socialite\Facades\Socialite;
 
@@ -16,6 +17,9 @@ class GoogleController extends Controller
         try {
             // Add logging to track the redirect process
             \Log::info('Starting Google redirect');
+            
+            // Store a session flag to indicate we're in the Google auth process
+            session(['google_auth_in_progress' => true]);
             
             // Simplify the redirect process
             return Socialite::driver('google')
@@ -40,6 +44,9 @@ class GoogleController extends Controller
             // Add detailed logging
             \Log::info('Google callback initiated');
 
+            // Clear the in-progress flag
+            session()->forget('google_auth_in_progress');
+
             // Use standard ->user() (NOT stateless) for web applications
             $googleUser = Socialite::driver('google')->user();
 
@@ -50,33 +57,59 @@ class GoogleController extends Controller
             ]);
 
             // Find existing user or create new one
-            $user = User::where('email', $googleUser->getEmail())->first();
+            $user = MadkrapowUser::where('email', $googleUser->getEmail())->first();
+            $isNewUser = false;
 
             if (!$user) {
                 \Log::info('Creating new user for Google auth');
-                $user = User::create([
+                $isNewUser = true;
+                
+                // Create user data array
+                $userData = [
                     'name' => $googleUser->getName(),
                     'email' => $googleUser->getEmail(),
-                    'google_id' => $googleUser->getId(),
                     'password' => bcrypt(Str::random(16)),
-                ]);
+                    'is_verified' => true,
+                ];
+                
+                // Add google_id if the column exists
+                if (Schema::hasColumn('madkrapow_users', 'google_id')) {
+                    $userData['google_id'] = $googleUser->getId();
+                }
+                
+                $user = MadkrapowUser::create($userData);
             } else {
-                \Log::info('Updating existing user for Google auth', ['user_id' => $user->id]);
-                // Update the google_id if it's not set
-                if (empty($user->google_id)) {
-                    $user->google_id = $googleUser->getId();
-                    $user->save();
+                \Log::info('Updating existing user for Google auth', ['user_id' => $user->user_id]);
+                
+                // Update the google_id if the column exists and it's not set
+                if (Schema::hasColumn('madkrapow_users', 'google_id')) {
+                    if (empty($user->google_id)) {
+                        $user->google_id = $googleUser->getId();
+                        $user->save();
+                    }
                 }
             }
 
             // Log the user in
             Auth::login($user);
-            \Log::info('User logged in successfully', ['user_id' => $user->id]);
+            \Log::info('User logged in successfully', ['user_id' => $user->user_id]);
 
-            // Redirect to homepage instead of dashboard
-            return redirect('/');
+            // Prepare appropriate success message based on whether this is a new user or existing user
+            if ($isNewUser) {
+                $message = 'Your account has been created successfully with Google! Welcome to Mad Krapow.';
+                $alertType = 'success';
+            } else {
+                $message = 'Welcome back! You have been logged in with Google.';
+                $alertType = 'info';
+            }
+
+            // Redirect to homepage with appropriate message
+            return redirect('/')->with($alertType, $message);
     
         } catch (Exception $e) {
+            // Clear the in-progress flag
+            session()->forget('google_auth_in_progress');
+            
             // Detailed error logging
             \Log::error('Google login error: ' . $e->getMessage(), [
                 'file' => $e->getFile(),

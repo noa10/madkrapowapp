@@ -2,6 +2,31 @@
 
 @section('title', 'Register - Mad Krapow')
 
+@section('styles')
+<style>
+    .btn-google-loading {
+        position: relative;
+        pointer-events: none;
+    }
+    .btn-google-loading:after {
+        content: '';
+        display: inline-block;
+        width: 1rem;
+        height: 1rem;
+        border: 2px solid rgba(255,255,255,0.3);
+        border-radius: 50%;
+        border-top-color: white;
+        animation: spin 1s ease-in-out infinite;
+        position: absolute;
+        right: 1rem;
+        top: calc(50% - 0.5rem);
+    }
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+</style>
+@endsection
+
 @section('content')
 <div class="container py-5">
     <div class="row justify-content-center">
@@ -63,6 +88,10 @@
                             <button type="submit" class="btn btn-primary">
                                 Register
                             </button>
+                            
+                            <a href="{{ route('auth.google') }}" id="google-signup-btn" class="btn btn-outline-danger mt-2" onclick="startGoogleSignup(event)">
+                                <i class="fab fa-google"></i> Sign up with Google
+                            </a>
                         </div>
 
                         <div class="mt-3 text-center">
@@ -74,4 +103,23 @@
         </div>
     </div>
 </div>
+@endsection
+
+@section('scripts')
+<script>
+    function startGoogleSignup(event) {
+        const button = event.currentTarget;
+        button.classList.add('btn-google-loading');
+        button.innerHTML = '<i class="fab fa-google"></i> Connecting to Google...';
+        // Continue with the redirect (don't prevent default)
+    }
+
+    // Check if we're returning from a Google auth attempt
+    document.addEventListener('DOMContentLoaded', function() {
+        if ({{ session('google_auth_in_progress') ? 'true' : 'false' }}) {
+            document.getElementById('google-signup-btn').classList.add('btn-google-loading');
+            document.getElementById('google-signup-btn').innerHTML = '<i class="fab fa-google"></i> Authenticating with Google...';
+        }
+    });
+</script>
 @endsection
