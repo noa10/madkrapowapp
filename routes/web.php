@@ -120,3 +120,36 @@ Route::get('reset-password/{token}', [App\Http\Controllers\Auth\ResetPasswordCon
     ->name('password.reset');
 Route::post('reset-password', [App\Http\Controllers\Auth\ResetPasswordController::class, 'reset'])
     ->name('password.update');
+// Google login
+Route::get('auth/google', [App\Http\Controllers\Auth\GoogleController::class, 'redirectToGoogle'])->name('auth.google');
+Route::get('auth/google/callback', [App\Http\Controllers\Auth\GoogleController::class, 'handleGoogleCallback']);
+// Add this debugging route
+Route::get('/debug-google', function() {
+    try {
+        $config = config('services.google');
+        return response()->json([
+            'client_id_configured' => !empty($config['client_id']),
+            'client_secret_configured' => !empty($config['client_secret']),
+            'redirect_configured' => !empty($config['redirect']),
+            'redirect_value' => $config['redirect'] ?? null,
+            'socialite_installed' => class_exists('Laravel\Socialite\Facades\Socialite'),
+        ]);
+    } catch (Exception $e) {
+        return response()->json(['error' => $e->getMessage()]);
+    }
+});
+// Add this debugging route
+Route::get('/debug-google', function() {
+    try {
+        $config = config('services.google');
+        return response()->json([
+            'client_id_configured' => !empty($config['client_id']),
+            'client_secret_configured' => !empty($config['client_secret']),
+            'redirect_configured' => !empty($config['redirect']),
+            'redirect_value' => $config['redirect'] ?? null,
+            'socialite_installed' => class_exists('Laravel\Socialite\Facades\Socialite'),
+        ]);
+    } catch (Exception $e) {
+        return response()->json(['error' => $e->getMessage()]);
+    }
+});
