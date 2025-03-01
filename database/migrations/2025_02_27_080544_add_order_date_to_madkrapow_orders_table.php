@@ -11,13 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-<<<<<<<< Updated upstream:database/migrations/2025_02_27_080544_add_order_date_to_madkrapow_orders_table.php
-        Schema::table('madkrapow_orders', function (Blueprint $table) {
-            $table->timestamp('order_date')->nullable();
-========
+        // Add google_id to users table
         Schema::table('users', function (Blueprint $table) {
             $table->string('google_id')->nullable()->after('email');
->>>>>>>> Stashed changes:database/migrations/2025_02_28_155339_add_google_id_to_users_table.php
+        });
+
+        // Add order_date to madkrapow_orders table
+        Schema::table('madkrapow_orders', function (Blueprint $table) {
+            $table->timestamp('order_date')->nullable();
         });
     }
 
@@ -26,13 +27,14 @@ return new class extends Migration
      */
     public function down(): void
     {
-<<<<<<<< Updated upstream:database/migrations/2025_02_27_080544_add_order_date_to_madkrapow_orders_table.php
-        Schema::table('madkrapow_orders', function (Blueprint $table) {
-            $table->dropColumn('order_date');
-========
+        // Remove google_id from users table
         Schema::table('users', function (Blueprint $table) {
             $table->dropColumn('google_id');
->>>>>>>> Stashed changes:database/migrations/2025_02_28_155339_add_google_id_to_users_table.php
+        });
+
+        // Remove order_date from madkrapow_orders table
+        Schema::table('madkrapow_orders', function (Blueprint $table) {
+            $table->dropColumn('order_date');
         });
     }
 };
