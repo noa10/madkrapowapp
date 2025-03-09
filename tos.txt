@@ -1,0 +1,66 @@
+Terms of Service - Mad Krapow
+1. Acceptance of Terms
+By accessing and using the Mad Krapow website (https://madkrapowapp.com), you agree to be bound by these Terms of Service. If you do not agree with any part of these terms, you must not use this website.  
+
+
+2. Products and Services
+Mad Krapow offers a selection of Thai food, ready-to-cook paste. Product descriptions and images are provided for informational purposes only and may not be entirely accurate. We reserve the right to modify or discontinue any product or service at any time without notice.  
+
+
+3. Ordering and Payment
+* Order Placement: Orders can be placed through the website. You are responsible for ensuring the accuracy of your order details, including delivery address and contact information.
+* Payment: We accept payments through Stripe (for credit/debit cards) and OCBC (for DuitNow and direct transfer]).
+* Payment Processing: Payment processing is handled by Stripe and OCBC. Your payment information is securely processed by these third-party providers. We do not store your full payment details.
+* Order Confirmation: An order confirmation will be sent to your provided email address upon successful payment.
+* Pricing: Prices are listed on the website and are subject to change without notice. Prices are inclusive of applicable taxes unless otherwise stated.
+* Refund and Cancellation Policies:
+    * Refund and cancellation policies are contingent upon the specific food packaging and other relevant factors. Once an order has been prepared, cancellation may not be feasible.
+    * Please contact us immediately if you have any issues with your order.
+    * Refunds, if applicable, will be processed through the original payment method.
+
+
+4. Delivery
+* Delivery Areas: We provide delivery services to Malaysia through the reputable logistics company J&T. 
+* Delivery Times: Estimated delivery times are provided during the ordering process. We are not responsible for delays caused by factors beyond our control, such as traffic or weather conditions.
+* Delivery Fees: Delivery fees, if applicable, will be displayed during checkout.
+* Delivery Acceptance: You are responsible for ensuring someone is available to receive the delivery at the specified address.
+
+
+5. User Accounts
+* You may create an account to enhance your ordering experience.
+* You are responsible for maintaining the confidentiality of your account credentials.
+* You agree to provide accurate and complete information when creating your account.   
+
+6. Intellectual Property
+All content on this website, including text, images, and logos, is the property of Mad Krapow or its licensors and is protected by copyright and other intellectual property laws.
+
+
+7. Limitation of Liability
+Mad Krapow shall not be liable for any direct, indirect, incidental, or consequential damages arising from your use of this website or our products and services.  
+
+
+8. Third-Party Links
+This website may contain links to third-party websites. We are not responsible for the content or privacy practices of these websites.  
+
+
+9. Governing Law
+These Terms of Service shall be governed by and construed in accordance with the laws of Malaysia.
+
+
+10. Changes to Terms of Service
+We reserve the right to modify these Terms of Service at any time. Any changes will be posted on this page.  
+
+
+11. Contact Information
+If you have any questions about these Terms of Service, please contact us at:
+k.anwarbakar@madkrapow.com
+
+
+12. Stripe and OCBC Specific Terms
+* By using Stripe for payment processing, you agree to Stripe's terms of service.
+* By using OCBC for payment processing, you agree to OCBC's terms of service.
+* We are not responsible for any issues or errors related to Stripe or OCBC's payment processing.
+
+
+Disclaimer:
+This Terms of Service document is provided for informational purposes only and does not constitute legal advice. You should consult with a legal professional to ensure that your Terms of Service comply with all applicable laws and regulations.

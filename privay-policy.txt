@@ -1,0 +1,94 @@
+Privacy Policy - Mad Krapow
+
+1. Introduction
+
+Mad Krapow ("we," "us," or "our") is committed to protecting your privacy. This Privacy Policy outlines how we collect, use, and disclose your personal information when you visit our website (https://madkrapowapp.com) and use our services.   
+
+2. Information We Collect
+
+We collect the following types of information:
+
+Personal Information:
+Name
+Email address
+Phone number
+Delivery address
+Payment information (processed by Stripe and OCBC, we do not store full payment details)
+Account login details (if you create an account)
+Usage Information:
+IP address
+Browser type
+Pages visited
+Time spent on our website
+Cookies and similar technologies (see our Cookie Policy below)
+Order Information:
+Order History
+Order Preferences.
+3. How We Use Your Information
+
+We use your information for the following purposes:
+
+To process and fulfill your orders.
+To communicate with you about your orders and provide customer support.   
+To improve our website and services.
+To send you promotional emails and updates (you can opt out at any time).   
+To comply with legal obligations.
+To detect and prevent fraud.
+4. Sharing Your Information
+
+We may share your information with:
+
+Service Providers:
+Stripe and OCBC (for payment processing).
+J&T (for delivery).
+Email marketing providers.
+Website hosting providers.
+Legal Compliance:
+When required by law or to protect our rights.
+Business Transfers:
+In connection with a merger, acquisition, or sale of assets.
+5. Data Security
+
+We take reasonable measures to protect your personal information from unauthorized access, use, or disclosure. However, no method of transmission over the internet or electronic storage is 100% secure.   
+
+6. Data Retention
+
+We retain your personal information for as long as necessary to fulfill the purposes outlined in this Privacy Policy, unless a longer retention period is required or permitted by law.   
+
+7. Your Rights
+
+You have the following rights regarding your personal information:
+
+Access: You can request access to the personal information we hold about you.   
+Correction: You can request that we correct any inaccurate or incomplete information.
+Deletion: You can request that we delete your personal information (subject to legal limitations).   
+Opt-Out: You can opt out of receiving promotional emails at any time.
+8. Cookie Policy
+
+We use cookies and similar technologies to enhance your browsing experience. Cookies are small files that are stored on your device. You can control cookies through your browser settings.   
+
+We use cookies for:
+Website functionality.
+Analytics.
+Personalization.
+9. Third-Party Links
+
+Our website may contain links to third-party websites. We are not responsible for the privacy practices of these websites.
+
+10. Changes to This Privacy Policy
+
+We may update this Privacy Policy from time to time. We will notify you of any changes by posting the new Privacy Policy on this page.   
+
+11. Contact Information
+
+If you have any questions about this Privacy Policy, please contact us at:   
+
+k.anwarbakar@madkrapow.com
+
+12. Governing Law
+
+This Privacy Policy shall be governed by and construed in accordance with the laws of Malaysia.
+
+Disclaimer:
+
+This Privacy Policy is provided for informational purposes only and does not constitute legal advice. You should consult with a legal professional to ensure that your Privacy Policy complies with all applicable laws and regulations.
