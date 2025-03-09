@@ -21,6 +21,40 @@
         right: 1rem;
         top: calc(50% - 0.5rem);
     }
+    .btn-facebook-loading {
+        position: relative;
+        pointer-events: none;
+    }
+    .btn-facebook-loading:after {
+        content: '';
+        display: inline-block;
+        width: 1rem;
+        height: 1rem;
+        border: 2px solid rgba(255,255,255,0.3);
+        border-radius: 50%;
+        border-top-color: white;
+        animation: spin 1s ease-in-out infinite;
+        position: absolute;
+        right: 1rem;
+        top: calc(50% - 0.5rem);
+    }
+    .btn-tiktok-loading {
+        position: relative;
+        pointer-events: none;
+    }
+    .btn-tiktok-loading:after {
+        content: '';
+        display: inline-block;
+        width: 1rem;
+        height: 1rem;
+        border: 2px solid rgba(255,255,255,0.3);
+        border-radius: 50%;
+        border-top-color: white;
+        animation: spin 1s ease-in-out infinite;
+        position: absolute;
+        right: 1rem;
+        top: calc(50% - 0.5rem);
+    }
     @keyframes spin {
         to { transform: rotate(360deg); }
     }
@@ -75,6 +109,14 @@
                                 <i class="fab fa-google"></i> Login with Google
                             </a>
                             
+                            <a href="{{ route('auth.facebook') }}" id="facebook-login-btn" class="btn btn-outline-primary mt-2" onclick="startFacebookLogin(event)">
+                                <i class="fab fa-facebook"></i> Login with Facebook
+                            </a>
+                            
+                            <a href="{{ route('auth.tiktok') }}" id="tiktok-login-btn" class="btn btn-outline-dark mt-2" onclick="startTikTokLogin(event)">
+                                <i class="fab fa-tiktok"></i> Login with TikTok
+                            </a>
+                            
                             @if (Route::has('password.request'))
                                 <div class="text-center mt-2">
                                     <a href="{{ route('password.request') }}">
@@ -101,14 +143,86 @@
         const button = event.currentTarget;
         button.classList.add('btn-google-loading');
         button.innerHTML = '<i class="fab fa-google"></i> Connecting to Google...';
-        // Continue with the redirect (don't prevent default)
+        
+        // Set a timeout to reset the button if the redirect doesn't happen
+        setTimeout(function() {
+            if (document.body.contains(button)) {
+                button.classList.remove('btn-google-loading');
+                button.innerHTML = '<i class="fab fa-google"></i> Login with Google';
+            }
+        }, 10000); // 10 seconds timeout
     }
 
-    // Check if we're returning from a Google auth attempt
+    function startFacebookLogin(event) {
+        const button = event.currentTarget;
+        button.classList.add('btn-facebook-loading');
+        button.innerHTML = '<i class="fab fa-facebook"></i> Connecting to Facebook...';
+        
+        // Set a timeout to reset the button if the redirect doesn't happen
+        setTimeout(function() {
+            if (document.body.contains(button)) {
+                button.classList.remove('btn-facebook-loading');
+                button.innerHTML = '<i class="fab fa-facebook"></i> Login with Facebook';
+            }
+        }, 10000); // 10 seconds timeout
+    }
+    
+    function startTikTokLogin(event) {
+        const button = event.currentTarget;
+        button.classList.add('btn-tiktok-loading');
+        button.innerHTML = '<i class="fab fa-tiktok"></i> Connecting to TikTok...';
+        
+        // Set a timeout to reset the button if the redirect doesn't happen
+        setTimeout(function() {
+            if (document.body.contains(button)) {
+                button.classList.remove('btn-tiktok-loading');
+                button.innerHTML = '<i class="fab fa-tiktok"></i> Login with TikTok';
+            }
+        }, 10000); // 10 seconds timeout
+    }
+
+    // Check if we're returning from a social auth attempt
     document.addEventListener('DOMContentLoaded', function() {
         if ({{ session('google_auth_in_progress') ? 'true' : 'false' }}) {
-            document.getElementById('google-login-btn').classList.add('btn-google-loading');
-            document.getElementById('google-login-btn').innerHTML = '<i class="fab fa-google"></i> Authenticating with Google...';
+            const googleBtn = document.getElementById('google-login-btn');
+            googleBtn.classList.add('btn-google-loading');
+            googleBtn.innerHTML = '<i class="fab fa-google"></i> Authenticating with Google...';
+            
+            // Set a timeout to reset the button if the authentication doesn't complete
+            setTimeout(function() {
+                if (document.body.contains(googleBtn)) {
+                    googleBtn.classList.remove('btn-google-loading');
+                    googleBtn.innerHTML = '<i class="fab fa-google"></i> Login with Google';
+                }
+            }, 10000); // 10 seconds timeout
+        }
+        
+        if ({{ session('facebook_auth_in_progress') ? 'true' : 'false' }}) {
+            const facebookBtn = document.getElementById('facebook-login-btn');
+            facebookBtn.classList.add('btn-facebook-loading');
+            facebookBtn.innerHTML = '<i class="fab fa-facebook"></i> Authenticating with Facebook...';
+            
+            // Set a timeout to reset the button if the authentication doesn't complete
+            setTimeout(function() {
+                if (document.body.contains(facebookBtn)) {
+                    facebookBtn.classList.remove('btn-facebook-loading');
+                    facebookBtn.innerHTML = '<i class="fab fa-facebook"></i> Login with Facebook';
+                }
+            }, 10000); // 10 seconds timeout
+        }
+        
+        if ({{ session('tiktok_auth_in_progress') ? 'true' : 'false' }}) {
+            const tiktokBtn = document.getElementById('tiktok-login-btn');
+            tiktokBtn.classList.add('btn-tiktok-loading');
+            tiktokBtn.innerHTML = '<i class="fab fa-tiktok"></i> Authenticating with TikTok...';
+            
+            // Set a timeout to reset the button if the authentication doesn't complete
+            setTimeout(function() {
+                if (document.body.contains(tiktokBtn)) {
+                    tiktokBtn.classList.remove('btn-tiktok-loading');
+                    tiktokBtn.innerHTML = '<i class="fab fa-tiktok"></i> Login with TikTok';
+                }
+            }, 10000); // 10 seconds timeout
         }
     });
 </script>

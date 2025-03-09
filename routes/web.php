@@ -123,6 +123,15 @@ Route::post('reset-password', [App\Http\Controllers\Auth\ResetPasswordController
 // Google login
 Route::get('auth/google', [App\Http\Controllers\Auth\GoogleController::class, 'redirectToGoogle'])->name('auth.google');
 Route::get('auth/google/callback', [App\Http\Controllers\Auth\GoogleController::class, 'handleGoogleCallback']);
+
+// Facebook login
+Route::get('auth/facebook', [App\Http\Controllers\Auth\FacebookController::class, 'redirectToFacebook'])->name('auth.facebook');
+Route::get('auth/facebook/callback', [App\Http\Controllers\Auth\FacebookController::class, 'handleFacebookCallback']);
+
+// TikTok login
+Route::get('auth/tiktok', [App\Http\Controllers\Auth\TikTokController::class, 'redirectToTikTok'])->name('auth.tiktok');
+Route::get('auth/tiktok/callback', [App\Http\Controllers\Auth\TikTokController::class, 'handleTikTokCallback']);
+
 // Add this debugging route
 Route::get('/debug-google', function() {
     try {
@@ -138,10 +147,11 @@ Route::get('/debug-google', function() {
         return response()->json(['error' => $e->getMessage()]);
     }
 });
-// Add this debugging route
-Route::get('/debug-google', function() {
+
+// Add this debugging route for Facebook
+Route::get('/debug-facebook', function() {
     try {
-        $config = config('services.google');
+        $config = config('services.facebook');
         return response()->json([
             'client_id_configured' => !empty($config['client_id']),
             'client_secret_configured' => !empty($config['client_secret']),
@@ -152,4 +162,62 @@ Route::get('/debug-google', function() {
     } catch (Exception $e) {
         return response()->json(['error' => $e->getMessage()]);
     }
+});
+
+// Add this debugging route for TikTok
+Route::get('/debug-tiktok', function() {
+    try {
+        $config = config('services.tiktok');
+        return response()->json([
+            'client_id_configured' => !empty($config['client_id']),
+            'client_secret_configured' => !empty($config['client_secret']),
+            'redirect_configured' => !empty($config['redirect']),
+            'redirect_value' => $config['redirect'] ?? null,
+            'socialite_installed' => class_exists('Laravel\Socialite\Facades\Socialite'),
+        ]);
+    } catch (Exception $e) {
+        return response()->json(['error' => $e->getMessage()]);
+    }
+});
+
+// Test route for Facebook OAuth
+Route::get('/test-facebook-oauth', function() {
+    try {
+        // Check if Facebook is configured
+        $config = config('services.facebook');
+        $configStatus = [
+            'client_id_configured' => !empty($config['client_id']),
+            'client_secret_configured' => !empty($config['client_secret']),
+            'redirect_configured' => !empty($config['redirect']),
+            'redirect_value' => $config['redirect'] ?? null,
+            'socialite_installed' => class_exists('Laravel\Socialite\Facades\Socialite'),
+        ];
+        
+        // Check if the Facebook App is valid
+        $appId = $config['client_id'];
+        $appSecret = $config['client_secret'];
+        
+        // Return the configuration status
+        return response()->json([
+            'config_status' => $configStatus,
+            'message' => 'If all configuration values are true, your Facebook OAuth setup should be working. Check the Facebook Developer Console to make sure your App is properly configured.',
+            'next_steps' => [
+                'Check if your Facebook App is in Development Mode',
+                'Make sure you have added the correct OAuth redirect URI in the Facebook Developer Console',
+                'Verify that your App has the "Facebook Login" product added',
+                'Check if you have added your app domain in the Facebook Developer Console',
+                'Make sure you have configured the correct App ID and App Secret in your .env file'
+            ]
+        ]);
+    } catch (Exception $e) {
+        return response()->json(['error' => $e->getMessage()]);
+    }
+});
+
+// Clear session route
+Route::get('/clear-auth-session', function() {
+    session()->forget('facebook_auth_in_progress');
+    session()->forget('google_auth_in_progress');
+    session()->forget('tiktok_auth_in_progress');
+    return redirect()->route('login')->with('info', 'Authentication session cleared. Please try again.');
 });

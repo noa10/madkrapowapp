@@ -29,6 +29,8 @@ class MadkrapowUser extends Authenticatable implements CanResetPassword
         'address',
         'is_verified',
         'google_id',
+        'facebook_id',
+        'tiktok_id',
     ];
 
     /**
