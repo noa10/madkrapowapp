@@ -11,82 +11,105 @@
                 <div class="card-body">
                     <p class="lead">Last updated: {{ date('F d, Y') }}</p>
                     
-                    <p>Mad Krapow ("we", "our", or "us") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you visit our website or make a purchase.</p>
+                    <h2 class="h4 mt-4">1. Introduction</h2>
+                    <p>Mad Krapow ("we," "us," or "our") is committed to protecting your privacy. This Privacy Policy outlines how we collect, use, and disclose your personal information when you visit our website (https://madkrapowapp.com) and use our services.</p>
                     
-                    <h2 class="h4 mt-4">1. Information We Collect</h2>
-                    <p>We may collect personal information that you voluntarily provide to us when you:</p>
-                    <ul>
-                        <li>Register on our website</li>
-                        <li>Place an order</li>
-                        <li>Subscribe to our newsletter</li>
-                        <li>Contact us</li>
-                        <li>Participate in promotions or surveys</li>
-                    </ul>
+                    <h2 class="h4 mt-4">2. Information We Collect</h2>
+                    <p>We collect the following types of information:</p>
                     
-                    <p>The personal information we may collect includes:</p>
+                    <h5 class="mt-3">Personal Information:</h5>
                     <ul>
                         <li>Name</li>
                         <li>Email address</li>
                         <li>Phone number</li>
-                        <li>Shipping and billing address</li>
-                        <li>Payment information (processed securely through our payment processors)</li>
-                        <li>Order history</li>
+                        <li>Delivery address</li>
+                        <li>Payment information (processed by Stripe and OCBC, we do not store full payment details)</li>
+                        <li>Account login details (if you create an account)</li>
                     </ul>
                     
-                    <h2 class="h4 mt-4">2. How We Use Your Information</h2>
-                    <p>We may use the information we collect for various purposes, including to:</p>
+                    <h5 class="mt-3">Usage Information:</h5>
                     <ul>
-                        <li>Process and fulfill your orders</li>
-                        <li>Communicate with you about your orders, products, and services</li>
-                        <li>Provide customer support</li>
-                        <li>Send you marketing communications (with your consent)</li>
-                        <li>Improve our website and services</li>
-                        <li>Comply with legal obligations</li>
-                        <li>Detect and prevent fraud</li>
+                        <li>IP address</li>
+                        <li>Browser type</li>
+                        <li>Pages visited</li>
+                        <li>Time spent on our website</li>
+                        <li>Cookies and similar technologies (see our Cookie Policy below)</li>
                     </ul>
                     
-                    <h2 class="h4 mt-4">3. Cookies and Tracking Technologies</h2>
-                    <p>We use cookies and similar tracking technologies to track activity on our website and store certain information. Cookies are files with a small amount of data that may include an anonymous unique identifier. You can instruct your browser to refuse all cookies or to indicate when a cookie is being sent.</p>
-                    
-                    <h2 class="h4 mt-4">4. Third-Party Service Providers</h2>
-                    <p>We may share your information with third-party service providers who perform services on our behalf, such as:</p>
+                    <h5 class="mt-3">Order Information:</h5>
                     <ul>
-                        <li>Payment processors (Stripe and OCBC)</li>
-                        <li>Shipping and delivery services (J&T)</li>
-                        <li>Email marketing services</li>
-                        <li>Analytics providers</li>
+                        <li>Order History</li>
+                        <li>Order Preferences</li>
                     </ul>
-                    <p>These third parties have access to your personal information only to perform these tasks on our behalf and are obligated not to disclose or use it for any other purpose.</p>
+                    
+                    <h2 class="h4 mt-4">3. How We Use Your Information</h2>
+                    <p>We use your information for the following purposes:</p>
+                    <ul>
+                        <li>To process and fulfill your orders.</li>
+                        <li>To communicate with you about your orders and provide customer support.</li>
+                        <li>To improve our website and services.</li>
+                        <li>To send you promotional emails and updates (you can opt out at any time).</li>
+                        <li>To comply with legal obligations.</li>
+                        <li>To detect and prevent fraud.</li>
+                    </ul>
+                    
+                    <h2 class="h4 mt-4">4. Sharing Your Information</h2>
+                    <p>We may share your information with:</p>
+                    
+                    <h5 class="mt-3">Service Providers:</h5>
+                    <ul>
+                        <li>Stripe and OCBC (for payment processing).</li>
+                        <li>J&T (for delivery).</li>
+                        <li>Email marketing providers.</li>
+                        <li>Website hosting providers.</li>
+                    </ul>
+                    
+                    <h5 class="mt-3">Legal Compliance:</h5>
+                    <p>When required by law or to protect our rights.</p>
+                    
+                    <h5 class="mt-3">Business Transfers:</h5>
+                    <p>In connection with a merger, acquisition, or sale of assets.</p>
                     
                     <h2 class="h4 mt-4">5. Data Security</h2>
-                    <p>We implement appropriate security measures to protect your personal information. However, no method of transmission over the Internet or electronic storage is 100% secure, and we cannot guarantee absolute security.</p>
+                    <p>We take reasonable measures to protect your personal information from unauthorized access, use, or disclosure. However, no method of transmission over the internet or electronic storage is 100% secure.</p>
                     
-                    <h2 class="h4 mt-4">6. Your Rights</h2>
-                    <p>Depending on your location, you may have certain rights regarding your personal information, including:</p>
+                    <h2 class="h4 mt-4">6. Data Retention</h2>
+                    <p>We retain your personal information for as long as necessary to fulfill the purposes outlined in this Privacy Policy, unless a longer retention period is required or permitted by law.</p>
+                    
+                    <h2 class="h4 mt-4">7. Your Rights</h2>
+                    <p>You have the following rights regarding your personal information:</p>
                     <ul>
-                        <li>The right to access your personal information</li>
-                        <li>The right to correct inaccurate information</li>
-                        <li>The right to request deletion of your information</li>
-                        <li>The right to object to or restrict processing of your information</li>
-                        <li>The right to data portability</li>
+                        <li><strong>Access:</strong> You can request access to the personal information we hold about you.</li>
+                        <li><strong>Correction:</strong> You can request that we correct any inaccurate or incomplete information.</li>
+                        <li><strong>Deletion:</strong> You can request that we delete your personal information (subject to legal limitations).</li>
+                        <li><strong>Opt-Out:</strong> You can opt out of receiving promotional emails at any time.</li>
                     </ul>
-                    <p>To exercise these rights, please contact us using the information provided below.</p>
                     
-                    <h2 class="h4 mt-4">7. Marketing Communications</h2>
-                    <p>You can opt out of receiving marketing communications from us by clicking the "unsubscribe" link in our emails or by contacting us directly.</p>
+                    <h2 class="h4 mt-4">8. Cookie Policy</h2>
+                    <p>We use cookies and similar technologies to enhance your browsing experience. Cookies are small files that are stored on your device. You can control cookies through your browser settings.</p>
                     
-                    <h2 class="h4 mt-4">8. Children's Privacy</h2>
-                    <p>Our website is not intended for children under 13 years of age. We do not knowingly collect personal information from children under 13.</p>
+                    <p>We use cookies for:</p>
+                    <ul>
+                        <li>Website functionality.</li>
+                        <li>Analytics.</li>
+                        <li>Personalization.</li>
+                    </ul>
                     
-                    <h2 class="h4 mt-4">9. Changes to This Privacy Policy</h2>
-                    <p>We may update our Privacy Policy from time to time. We will notify you of any changes by posting the new Privacy Policy on this page and updating the "Last updated" date.</p>
+                    <h2 class="h4 mt-4">9. Third-Party Links</h2>
+                    <p>Our website may contain links to third-party websites. We are not responsible for the privacy practices of these websites.</p>
                     
-                    <h2 class="h4 mt-4">10. Contact Us</h2>
+                    <h2 class="h4 mt-4">10. Changes to This Privacy Policy</h2>
+                    <p>We may update this Privacy Policy from time to time. We will notify you of any changes by posting the new Privacy Policy on this page.</p>
+                    
+                    <h2 class="h4 mt-4">11. Contact Information</h2>
                     <p>If you have any questions about this Privacy Policy, please contact us at:</p>
-                    <p>Email: k.anwarbakar@madkrapow.com</p>
+                    <p>k.anwarbakar@madkrapow.com</p>
+                    
+                    <h2 class="h4 mt-4">12. Governing Law</h2>
+                    <p>This Privacy Policy shall be governed by and construed in accordance with the laws of Malaysia.</p>
                     
                     <div class="alert alert-secondary mt-4">
-                        <strong>Disclaimer:</strong> This Privacy Policy is provided for informational purposes only and does not constitute legal advice. You should consult with a legal professional to ensure that your Privacy Policy complies with all applicable laws and regulations, including GDPR, CCPA, and other privacy laws that may apply to your business.
+                        <strong>Disclaimer:</strong> This Privacy Policy is provided for informational purposes only and does not constitute legal advice. You should consult with a legal professional to ensure that your Privacy Policy complies with all applicable laws and regulations.
                     </div>
                 </div>
             </div>
