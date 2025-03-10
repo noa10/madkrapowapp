@@ -5,6 +5,7 @@ namespace App\Services;
 use Laravel\Socialite\Two\AbstractProvider;
 use Laravel\Socialite\Two\ProviderInterface;
 use Laravel\Socialite\Two\User;
+use Illuminate\Support\Facades\Log;
 
 class TikTokProvider extends AbstractProvider implements ProviderInterface
 {
@@ -20,7 +21,11 @@ class TikTokProvider extends AbstractProvider implements ProviderInterface
      */
     protected function getAuthUrl($state)
     {
-        return $this->buildAuthUrlFromBase('https://www.tiktok.com/auth/authorize/', $state);
+        // Log the auth URL for debugging
+        $url = 'https://www.tiktok.com/auth/authorize/';
+        $fullUrl = $this->buildAuthUrlFromBase($url, $state);
+        Log::info('TikTok Auth URL', ['url' => $fullUrl]);
+        return $fullUrl;
     }
 
     /**
@@ -36,14 +41,26 @@ class TikTokProvider extends AbstractProvider implements ProviderInterface
      */
     protected function getUserByToken($token)
     {
-        $response = $this->getHttpClient()->get('https://open-api.tiktok.com/user/info/', [
-            'query' => [
-                'access_token' => $token,
-                'open_id' => $this->credentialsResponseBody['open_id'] ?? null,
-            ],
-        ]);
+        try {
+            $response = $this->getHttpClient()->get('https://open-api.tiktok.com/user/info/', [
+                'query' => [
+                    'access_token' => $token,
+                    'open_id' => $this->credentialsResponseBody['open_id'] ?? null,
+                    'fields' => 'open_id,display_name,avatar_url',
+                ],
+            ]);
 
-        return json_decode($response->getBody(), true);
+            $userData = json_decode($response->getBody(), true);
+            Log::info('TikTok User Data Response', ['data' => $userData]);
+            
+            return $userData;
+        } catch (\Exception $e) {
+            Log::error('TikTok getUserByToken Error', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            throw $e;
+        }
     }
 
     /**
@@ -51,6 +68,8 @@ class TikTokProvider extends AbstractProvider implements ProviderInterface
      */
     protected function mapUserToObject(array $user)
     {
+        Log::info('Mapping TikTok user to object', ['raw_user' => $user]);
+        
         $userData = $user['data']['user'] ?? [];
         
         return (new User)->setRaw($user)->map([
@@ -67,9 +86,17 @@ class TikTokProvider extends AbstractProvider implements ProviderInterface
      */
     protected function getTokenFields($code)
     {
-        return array_merge(parent::getTokenFields($code), [
+        $fields = [
             'client_key' => $this->clientId,
-        ]);
+            'client_secret' => $this->clientSecret,
+            'code' => $code,
+            'grant_type' => 'authorization_code',
+            'redirect_uri' => $this->redirectUrl,
+        ];
+        
+        Log::info('TikTok Token Fields', ['fields' => $fields]);
+        
+        return $fields;
     }
 
     /**
@@ -77,15 +104,26 @@ class TikTokProvider extends AbstractProvider implements ProviderInterface
      */
     public function getAccessTokenResponse($code)
     {
-        $response = $this->getHttpClient()->post($this->getTokenUrl(), [
-            'form_params' => $this->getTokenFields($code),
-        ]);
+        try {
+            Log::info('Getting TikTok access token', ['code' => $code]);
+            
+            $response = $this->getHttpClient()->post($this->getTokenUrl(), [
+                'form_params' => $this->getTokenFields($code),
+            ]);
 
-        $data = json_decode($response->getBody(), true);
-        
-        // Store the open_id for later use
-        $this->credentialsResponseBody = $data['data'] ?? [];
-        
-        return $data['data'] ?? [];
+            $data = json_decode($response->getBody(), true);
+            Log::info('TikTok Token Response', ['data' => $data]);
+            
+            // Store the open_id for later use
+            $this->credentialsResponseBody = $data['data'] ?? [];
+            
+            return $data['data'] ?? [];
+        } catch (\Exception $e) {
+            Log::error('TikTok getAccessTokenResponse Error', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            throw $e;
+        }
     }
 } 

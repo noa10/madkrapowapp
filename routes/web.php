@@ -214,6 +214,36 @@ Route::get('/test-facebook-oauth', function() {
     }
 });
 
+// Test route for TikTok OAuth
+Route::get('/test-tiktok-oauth', function() {
+    try {
+        // Check if TikTok is configured
+        $config = config('services.tiktok');
+        $configStatus = [
+            'client_id_configured' => !empty($config['client_id']),
+            'client_secret_configured' => !empty($config['client_secret']),
+            'redirect_configured' => !empty($config['redirect']),
+            'redirect_value' => $config['redirect'] ?? null,
+            'socialite_installed' => class_exists('Laravel\Socialite\Facades\Socialite'),
+        ];
+        
+        // Return the configuration status
+        return response()->json([
+            'config_status' => $configStatus,
+            'message' => 'If all configuration values are true, your TikTok OAuth setup should be working. Check the TikTok Developer Console to make sure your App is properly configured.',
+            'next_steps' => [
+                'Make sure your TikTok App is in Development Mode',
+                'Verify that the redirect URI in your TikTok Developer Console matches exactly: ' . $config['redirect'],
+                'Ensure your TikTok App has the correct permissions',
+                'Check that your App Domain in TikTok Developer Console includes madkrapow.com',
+                'Verify that your Client Key and Client Secret in .env match what\'s in the TikTok Developer Console'
+            ]
+        ]);
+    } catch (Exception $e) {
+        return response()->json(['error' => $e->getMessage()]);
+    }
+});
+
 // Clear session route
 Route::get('/clear-auth-session', function() {
     session()->forget('facebook_auth_in_progress');
@@ -221,3 +251,11 @@ Route::get('/clear-auth-session', function() {
     session()->forget('tiktok_auth_in_progress');
     return redirect()->route('login')->with('info', 'Authentication session cleared. Please try again.');
 });
+
+// Add these routes to your existing web.php file
+
+// Facebook Data Deletion Routes
+Route::post('/facebook/data-deletion', [App\Http\Controllers\FacebookDataDeletionController::class, 'handleDataDeletion'])
+    ->name('facebook.data-deletion');
+Route::get('/facebook/data-deletion/status/{id}', [App\Http\Controllers\FacebookDataDeletionController::class, 'showStatus'])
+    ->name('facebook.data-deletion.status');

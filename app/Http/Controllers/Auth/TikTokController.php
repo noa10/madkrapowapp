@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Laravel\Socialite\Facades\Socialite;
+use Illuminate\Http\Request;
 
 class TikTokController extends Controller
 {
@@ -50,13 +51,30 @@ class TikTokController extends Controller
         }
     }
 
-    public function handleTikTokCallback()
+    public function handleTikTokCallback(Request $request)
     {
         try {
             // Add detailed logging
             Log::info('TikTok callback initiated', [
-                'request_params' => request()->all()
+                'request_params' => $request->all(),
+                'request_url' => $request->fullUrl()
             ]);
+
+            // Check for errors in the callback
+            if ($request->has('error')) {
+                Log::error('TikTok callback error', [
+                    'error' => $request->error,
+                    'error_code' => $request->errCode,
+                    'error_type' => $request->error_type,
+                    'error_string' => $request->error_string
+                ]);
+                
+                // Clear the in-progress flag
+                session()->forget('tiktok_auth_in_progress');
+                
+                return redirect()->route('login')
+                    ->with('error', 'TikTok authentication failed: ' . ($request->error_string ?? $request->error));
+            }
 
             // Clear the in-progress flag
             session()->forget('tiktok_auth_in_progress');
