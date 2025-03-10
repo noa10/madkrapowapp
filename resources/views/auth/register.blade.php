@@ -129,8 +129,7 @@
                             
                             <a href="{{ route('auth.facebook') }}" id="facebook-signup-btn" class="btn btn-outline-primary mt-2" onclick="startFacebookSignup(event)">
                                 <i class="fab fa-facebook"></i> Sign up with Facebook
-                            </a>
-                            
+                            </a>                            
                             <a href="{{ route('auth.tiktok') }}" id="tiktok-signup-btn" class="btn btn-outline-dark mt-2" onclick="startTikTokSignup(event)">
                                 <i class="fab fa-tiktok"></i> Sign up with TikTok
                             </a>
@@ -182,6 +181,15 @@
         button.classList.add('btn-tiktok-loading');
         button.innerHTML = '<i class="fab fa-tiktok"></i> Connecting to TikTok...';
         
+        // Store the authentication state in localStorage for CSRF protection
+        const state = generateRandomString(16);
+        localStorage.setItem('tiktok_auth_state', state);
+        
+        // Redirect to TikTok auth with proper parameters
+        const redirectUrl = new URL(button.href);
+        redirectUrl.searchParams.append('state', state);
+        window.location.href = redirectUrl.toString();
+        
         // Set a timeout to reset the button if the redirect doesn't happen
         setTimeout(function() {
             if (document.body.contains(button)) {
@@ -189,6 +197,16 @@
                 button.innerHTML = '<i class="fab fa-tiktok"></i> Sign up with TikTok';
             }
         }, 10000); // 10 seconds timeout
+    }
+    
+    // Helper function to generate random string for state parameter
+    function generateRandomString(length) {
+        const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+        let result = '';
+        for (let i = 0; i < length; i++) {
+            result += characters.charAt(Math.floor(Math.random() * characters.length));
+        }
+        return result;
     }
 
     // Check if we're returning from a social auth attempt
@@ -225,6 +243,23 @@
             const tiktokBtn = document.getElementById('tiktok-signup-btn');
             tiktokBtn.classList.add('btn-tiktok-loading');
             tiktokBtn.innerHTML = '<i class="fab fa-tiktok"></i> Authenticating with TikTok...';
+            
+            // Verify the state parameter to prevent CSRF attacks
+            const urlParams = new URLSearchParams(window.location.search);
+            const returnedState = urlParams.get('state');
+            const storedState = localStorage.getItem('tiktok_auth_state');
+            
+            if (returnedState && storedState && returnedState === storedState) {
+                // State matches, continue with authentication
+                localStorage.removeItem('tiktok_auth_state'); // Clean up
+            } else if (returnedState) {
+                // State mismatch, potential CSRF attack
+                console.error('TikTok authentication state mismatch');
+                tiktokBtn.classList.remove('btn-tiktok-loading');
+                tiktokBtn.innerHTML = '<i class="fab fa-tiktok"></i> Sign up with TikTok';
+                alert('Authentication failed. Please try again.');
+                return;
+            }
             
             // Set a timeout to reset the button if the authentication doesn't complete
             setTimeout(function() {

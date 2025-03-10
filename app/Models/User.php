@@ -31,12 +31,14 @@ class User extends Authenticatable implements CanResetPassword
     /**
      * The attributes that are mass assignable.
      *
-     * @var list<string>
+     * @var array<int, string>
      */
     protected $fillable = [
         'name',
         'email',
         'password',
+        'tiktok_id',
+        'avatar',
     ];
 
     /**

@@ -22,7 +22,7 @@ class TikTokProvider extends AbstractProvider implements ProviderInterface
     protected function getAuthUrl($state)
     {
         // Log the auth URL for debugging
-        $url = 'https://www.tiktok.com/auth/authorize/';
+        $url = 'https://www.tiktok.com/v2/auth/authorize/';
         $fullUrl = $this->buildAuthUrlFromBase($url, $state);
         Log::info('TikTok Auth URL', ['url' => $fullUrl]);
         return $fullUrl;
@@ -33,7 +33,7 @@ class TikTokProvider extends AbstractProvider implements ProviderInterface
      */
     protected function getTokenUrl()
     {
-        return 'https://open-api.tiktok.com/oauth/access_token/';
+        return 'https://open.tiktokapis.com/v2/oauth/token/';
     }
 
     /**
@@ -42,11 +42,12 @@ class TikTokProvider extends AbstractProvider implements ProviderInterface
     protected function getUserByToken($token)
     {
         try {
-            $response = $this->getHttpClient()->get('https://open-api.tiktok.com/user/info/', [
+            $response = $this->getHttpClient()->get('https://open.tiktokapis.com/v2/user/info/', [
+                'headers' => [
+                    'Authorization' => 'Bearer ' . $token,
+                ],
                 'query' => [
-                    'access_token' => $token,
-                    'open_id' => $this->credentialsResponseBody['open_id'] ?? null,
-                    'fields' => 'open_id,display_name,avatar_url',
+                    'fields' => 'open_id,union_id,avatar_url,avatar_url_100,avatar_url_200,display_name,bio_description,profile_deep_link,is_verified,follower_count,following_count,likes_count',
                 ],
             ]);
 
@@ -70,7 +71,7 @@ class TikTokProvider extends AbstractProvider implements ProviderInterface
     {
         Log::info('Mapping TikTok user to object', ['raw_user' => $user]);
         
-        $userData = $user['data']['user'] ?? [];
+        $userData = $user['data'] ?? [];
         
         return (new User)->setRaw($user)->map([
             'id' => $userData['open_id'] ?? null,
@@ -108,16 +109,16 @@ class TikTokProvider extends AbstractProvider implements ProviderInterface
             Log::info('Getting TikTok access token', ['code' => $code]);
             
             $response = $this->getHttpClient()->post($this->getTokenUrl(), [
+                'headers' => [
+                    'Content-Type' => 'application/x-www-form-urlencoded',
+                ],
                 'form_params' => $this->getTokenFields($code),
             ]);
 
             $data = json_decode($response->getBody(), true);
             Log::info('TikTok Token Response', ['data' => $data]);
             
-            // Store the open_id for later use
-            $this->credentialsResponseBody = $data['data'] ?? [];
-            
-            return $data['data'] ?? [];
+            return $data;
         } catch (\Exception $e) {
             Log::error('TikTok getAccessTokenResponse Error', [
                 'message' => $e->getMessage(),

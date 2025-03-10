@@ -8,6 +8,8 @@ use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ReviewController;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 /*
 |--------------------------------------------------------------------------
@@ -131,6 +133,13 @@ Route::get('auth/facebook/callback', [App\Http\Controllers\Auth\FacebookControll
 // TikTok login
 Route::get('auth/tiktok', [App\Http\Controllers\Auth\TikTokController::class, 'redirectToTikTok'])->name('auth.tiktok');
 Route::get('auth/tiktok/callback', [App\Http\Controllers\Auth\TikTokController::class, 'handleTikTokCallback']);
+Route::get('auth/tiktok/error', function(Request $request) {
+    Log::error('TikTok auth error redirect', [
+        'params' => $request->all(),
+        'url' => $request->fullUrl()
+    ]);
+    return redirect()->route('login')->with('error', 'TikTok authentication failed: ' . ($request->get('error_string') ?? $request->get('error')));
+})->name('auth.tiktok.error');
 
 // Add this debugging route
 Route::get('/debug-google', function() {
@@ -259,3 +268,10 @@ Route::post('/facebook/data-deletion', [App\Http\Controllers\FacebookDataDeletio
     ->name('facebook.data-deletion');
 Route::get('/facebook/data-deletion/status/{id}', [App\Http\Controllers\FacebookDataDeletionController::class, 'showStatus'])
     ->name('facebook.data-deletion.status');
+
+// TikTok Authentication Routes
+// Make sure these routes are defined
+// Should be:
+// TikTok OAuth routes
+Route::get('auth/tiktok', [App\Http\Controllers\Auth\TikTokController::class, 'redirect'])->name('auth.tiktok');
+Route::get('auth/tiktok/callback', [App\Http\Controllers\Auth\TikTokController::class, 'callback']);

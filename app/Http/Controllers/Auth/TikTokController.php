@@ -3,171 +3,194 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use App\Models\MadkrapowUser;
-use Exception;
+use App\Models\User;
+use App\Models\SocialAccount;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
-use Laravel\Socialite\Facades\Socialite;
-use Illuminate\Http\Request;
 
 class TikTokController extends Controller
 {
-    public function redirectToTikTok()
+    /**
+     * Redirect the user to the TikTok authentication page.
+     *
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function redirect()
     {
-        try {
-            // Add detailed logging to track the redirect process
-            Log::info('Starting TikTok redirect', [
-                'tiktok_config' => [
-                    'client_id_set' => !empty(config('services.tiktok.client_id')),
-                    'client_secret_set' => !empty(config('services.tiktok.client_secret')),
-                    'redirect_uri_set' => !empty(config('services.tiktok.redirect')),
-                    'redirect_uri' => config('services.tiktok.redirect')
-                ]
+        $state = Str::random(40);
+        
+        // Store state in session for validation when user returns
+        session(['tiktok_state' => $state]);
+        
+        $query = http_build_query([
+            'client_key' => config('services.tiktok.client_id'),
+            'scope' => 'user.info.basic',
+            'response_type' => 'code',
+            'redirect_uri' => config('services.tiktok.redirect'),
+            'state' => $state,
+        ]);
+        
+        session(['tiktok_auth_in_progress' => true]);
+        
+        return redirect('https://www.tiktok.com/v2/auth/authorize?' . $query);
+    }
+    
+    /**
+     * Handle the callback from TikTok.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function callback(Request $request)
+    {
+        // Clear the in-progress flag
+        session()->forget('tiktok_auth_in_progress');
+        
+        // Verify state to prevent CSRF attacks
+        if ($request->state !== session('tiktok_state')) {
+            return redirect()->route('register')
+                ->with('error', 'Invalid state parameter. Authentication failed.');
+        }
+        
+        // Clear the state from session
+        session()->forget('tiktok_state');
+        
+        // Check for error response
+        if ($request->has('error')) {
+            Log::error('TikTok authentication error', [
+                'error' => $request->error,
+                'error_description' => $request->error_description
             ]);
             
-            // Store a session flag to indicate we're in the TikTok auth process
-            session(['tiktok_auth_in_progress' => true]);
+            return redirect()->route('register')
+                ->with('error', 'TikTok authentication failed: ' . $request->error_description);
+        }
+        
+        // Exchange authorization code for access token
+        try {
+            $response = Http::post('https://open.tiktokapis.com/v2/oauth/token/', [
+                'client_key' => config('services.tiktok.client_id'),
+                'client_secret' => config('services.tiktok.client_secret'),
+                'code' => $request->code,
+                'grant_type' => 'authorization_code',
+                'redirect_uri' => config('services.tiktok.redirect'),
+            ]);
             
-            // Redirect to TikTok OAuth
-            return Socialite::driver('tiktok')
-                ->scopes(['user.info.basic'])
-                ->redirect();
+            $tokenData = $response->json();
+            
+            if (!isset($tokenData['access_token'])) {
+                Log::error('TikTok token exchange failed', ['response' => $tokenData]);
+                return redirect()->route('register')
+                    ->with('error', 'Failed to obtain access token from TikTok.');
+            }
+            
+            // Get user info with the access token
+            $userResponse = Http::withToken($tokenData['access_token'])
+                ->get('https://open.tiktokapis.com/v2/user/info/', [
+                    'fields' => 'open_id,union_id,avatar_url,display_name,email'
+                ]);
+            
+            $userData = $userResponse->json();
+            
+            if (!isset($userData['data']) || !isset($userData['data']['user'])) {
+                Log::error('TikTok user info retrieval failed', ['response' => $userData]);
+                return redirect()->route('register')
+                    ->with('error', 'Failed to retrieve user information from TikTok.');
+            }
+            
+            $tikTokUser = $userData['data']['user'];
+            
+            // Find or create user
+            $socialAccount = SocialAccount::where('provider', 'tiktok')
+                ->where('provider_user_id', $tikTokUser['open_id'])
+                ->first();
+            
+            if ($socialAccount) {
+                // Login existing user
+                Auth::login($socialAccount->user);
+                return redirect()->intended('/dashboard');
+            }
+            
+            // Create new user
+            $user = User::where('email', $tikTokUser['email'] ?? null)->first();
+            
+            if (!$user && empty($tikTokUser['email'])) {
+                // TikTok didn't provide an email, redirect to a form to collect it
+                session([
+                    'tiktok_user' => $tikTokUser,
+                    'tiktok_token' => $tokenData
+                ]);
                 
-        } catch (Exception $e) {
-            // Clear the in-progress flag
-            session()->forget('tiktok_auth_in_progress');
+                return redirect()->route('social.email.form', ['provider' => 'tiktok']);
+            }
             
-            // Log any errors that occur during redirect
-            Log::error('TikTok redirect error: ' . $e->getMessage(), [
-                'file' => $e->getFile(),
-                'line' => $e->getLine(),
+            if (!$user) {
+                $user = User::create([
+                    'name' => $tikTokUser['display_name'] ?? 'TikTok User',
+                    'email' => $tikTokUser['email'],
+                    'password' => bcrypt(Str::random(24)),
+                ]);
+            }
+            
+            // Create social account link
+            $user->socialAccounts()->create([
+                'provider' => 'tiktok',
+                'provider_user_id' => $tikTokUser['open_id'],
+                'token' => $tokenData['access_token'],
+                'refresh_token' => $tokenData['refresh_token'] ?? null,
+                'token_expires_at' => now()->addSeconds($tokenData['expires_in'] ?? 0),
+            ]);
+            
+            Auth::login($user);
+            
+            return redirect()->intended('/dashboard');
+            
+        } catch (\Exception $e) {
+            Log::error('TikTok authentication exception', [
+                'message' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
             
-            return redirect()->route('login')
-                ->with('error', 'Unable to connect to TikTok. Please try again later. Error: ' . $e->getMessage());
+            return redirect()->route('register')
+                ->with('error', 'An error occurred during TikTok authentication.');
         }
     }
-
-    public function handleTikTokCallback(Request $request)
+    
+    /**
+     * Refresh the TikTok access token.
+     *
+     * @param  string  $refreshToken
+     * @return array|null
+     */
+    public function refreshToken($refreshToken)
     {
         try {
-            // Add detailed logging
-            Log::info('TikTok callback initiated', [
-                'request_params' => $request->all(),
-                'request_url' => $request->fullUrl()
+            $response = Http::post('https://open.tiktokapis.com/v2/oauth/token/', [
+                'client_key' => config('services.tiktok.client_id'),
+                'client_secret' => config('services.tiktok.client_secret'),
+                'grant_type' => 'refresh_token',
+                'refresh_token' => $refreshToken,
             ]);
-
-            // Check for errors in the callback
-            if ($request->has('error')) {
-                Log::error('TikTok callback error', [
-                    'error' => $request->error,
-                    'error_code' => $request->errCode,
-                    'error_type' => $request->error_type,
-                    'error_string' => $request->error_string
-                ]);
-                
-                // Clear the in-progress flag
-                session()->forget('tiktok_auth_in_progress');
-                
-                return redirect()->route('login')
-                    ->with('error', 'TikTok authentication failed: ' . ($request->error_string ?? $request->error));
-            }
-
-            // Clear the in-progress flag
-            session()->forget('tiktok_auth_in_progress');
-
-            // Get the TikTok user
-            $tiktokUser = Socialite::driver('tiktok')->user();
-
-            // Log the TikTok user data (be careful with sensitive info)
-            Log::info('TikTok user retrieved', [
-                'id' => $tiktokUser->getId(),
-                'nickname' => $tiktokUser->getNickname(),
-                'name' => $tiktokUser->getName(),
-                'avatar' => $tiktokUser->getAvatar()
-            ]);
-
-            // TikTok doesn't always provide email, so we'll use the ID as a unique identifier
-            // and generate a placeholder email if needed
-            $email = $tiktokUser->getEmail();
-            if (empty($email)) {
-                $email = 'tiktok_' . $tiktokUser->getId() . '@example.com';
-                Log::info('Generated placeholder email for TikTok user', ['email' => $email]);
-            }
-
-            // Find existing user or create new one
-            $user = MadkrapowUser::where('tiktok_id', $tiktokUser->getId())->first();
             
-            if (!$user) {
-                // Try to find by email if available
-                $user = MadkrapowUser::where('email', $email)->first();
+            $tokenData = $response->json();
+            
+            if (isset($tokenData['access_token'])) {
+                return $tokenData;
             }
             
-            $isNewUser = false;
-
-            if (!$user) {
-                Log::info('Creating new user for TikTok auth');
-                $isNewUser = true;
-                
-                // Create user data array
-                $userData = [
-                    'name' => $tiktokUser->getName() ?: $tiktokUser->getNickname() ?: 'TikTok User',
-                    'email' => $email,
-                    'password' => bcrypt(Str::random(16)),
-                    'is_verified' => true,
-                ];
-                
-                // Add tiktok_id if the column exists
-                if (Schema::hasColumn('madkrapow_users', 'tiktok_id')) {
-                    $userData['tiktok_id'] = $tiktokUser->getId();
-                }
-                
-                $user = MadkrapowUser::create($userData);
-            } else {
-                Log::info('Updating existing user for TikTok auth', ['user_id' => $user->user_id]);
-                
-                // Update the tiktok_id if the column exists and it's not set
-                if (Schema::hasColumn('madkrapow_users', 'tiktok_id')) {
-                    if (empty($user->tiktok_id)) {
-                        $user->tiktok_id = $tiktokUser->getId();
-                        $user->save();
-                    }
-                }
-            }
-
-            // Log the user in
-            Auth::login($user);
-            Log::info('User logged in successfully', ['user_id' => $user->user_id]);
-
-            // Prepare appropriate success message based on whether this is a new user or existing user
-            if ($isNewUser) {
-                $message = 'Your account has been created successfully with TikTok! Welcome to Mad Krapow.';
-                $alertType = 'success';
-            } else {
-                $message = 'Welcome back! You have been logged in with TikTok.';
-                $alertType = 'info';
-            }
-
-            // Redirect to homepage with appropriate message
-            return redirect('/')->with($alertType, $message);
-    
-        } catch (Exception $e) {
-            // Clear the in-progress flag
-            session()->forget('tiktok_auth_in_progress');
+            Log::error('TikTok token refresh failed', ['response' => $tokenData]);
+            return null;
             
-            // Detailed error logging
-            Log::error('TikTok login error: ' . $e->getMessage(), [
-                'file' => $e->getFile(),
-                'line' => $e->getLine(),
-                'trace' => $e->getTraceAsString(),
-                'request_params' => request()->all()
+        } catch (\Exception $e) {
+            Log::error('TikTok token refresh exception', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
             ]);
-    
-            return redirect()->route('login')
-                ->with('error', 'TikTok authentication failed. Please try again. Error: ' . $e->getMessage());
+            
+            return null;
         }
     }
-} 
+}

@@ -113,6 +113,7 @@
                                 <i class="fab fa-facebook"></i> Login with Facebook
                             </a>
                             
+                            <!-- Change this line from tiktok.login to auth.tiktok -->
                             <a href="{{ route('auth.tiktok') }}" id="tiktok-login-btn" class="btn btn-outline-dark mt-2" onclick="startTikTokLogin(event)">
                                 <i class="fab fa-tiktok"></i> Login with TikTok
                             </a>
