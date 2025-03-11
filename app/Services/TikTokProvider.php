@@ -6,6 +6,7 @@ use Laravel\Socialite\Two\AbstractProvider;
 use Laravel\Socialite\Two\ProviderInterface;
 use Laravel\Socialite\Two\User;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class TikTokProvider extends AbstractProvider implements ProviderInterface
 {
@@ -21,6 +22,22 @@ class TikTokProvider extends AbstractProvider implements ProviderInterface
      */
     protected function getAuthUrl($state)
     {
+        // Generate a code verifier
+        $codeVerifier = Str::random(128);
+        
+        // Store the code verifier in session for later use
+        session(['tiktok_code_verifier' => $codeVerifier]);
+        
+        // Generate code challenge (SHA256 hash of code verifier, base64url encoded)
+        $codeChallenge = strtr(rtrim(
+            base64_encode(hash('sha256', $codeVerifier, true)),
+            '='
+        ), '+/', '-_');
+        
+        // Add code challenge parameters to the query
+        $this->parameters['code_challenge'] = $codeChallenge;
+        $this->parameters['code_challenge_method'] = 'S256';
+        
         // Log the auth URL for debugging
         $url = 'https://www.tiktok.com/v2/auth/authorize/';
         $fullUrl = $this->buildAuthUrlFromBase($url, $state);
@@ -87,12 +104,19 @@ class TikTokProvider extends AbstractProvider implements ProviderInterface
      */
     protected function getTokenFields($code)
     {
+        // Get code verifier from session
+        $codeVerifier = session('tiktok_code_verifier');
+        
+        // Clear code verifier from session
+        session()->forget('tiktok_code_verifier');
+        
         $fields = [
             'client_key' => $this->clientId,
             'client_secret' => $this->clientSecret,
             'code' => $code,
             'grant_type' => 'authorization_code',
             'redirect_uri' => $this->redirectUrl,
+            'code_verifier' => $codeVerifier,
         ];
         
         Log::info('TikTok Token Fields', ['fields' => $fields]);

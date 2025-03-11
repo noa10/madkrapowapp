@@ -21,9 +21,17 @@ class TikTokController extends Controller
     public function redirect()
     {
         $state = Str::random(40);
+        $codeVerifier = Str::random(128);
         
-        // Store state in session for validation when user returns
+        // Store state and code verifier in session for validation when user returns
         session(['tiktok_state' => $state]);
+        session(['tiktok_code_verifier' => $codeVerifier]);
+        
+        // Generate code challenge (SHA256 hash of code verifier, base64url encoded)
+        $codeChallenge = strtr(rtrim(
+            base64_encode(hash('sha256', $codeVerifier, true)),
+            '='
+        ), '+/', '-_');
         
         $query = http_build_query([
             'client_key' => config('services.tiktok.client_id'),
@@ -31,6 +39,8 @@ class TikTokController extends Controller
             'response_type' => 'code',
             'redirect_uri' => config('services.tiktok.redirect'),
             'state' => $state,
+            'code_challenge' => $codeChallenge,
+            'code_challenge_method' => 'S256',
         ]);
         
         session(['tiktok_auth_in_progress' => true]);
@@ -55,8 +65,12 @@ class TikTokController extends Controller
                 ->with('error', 'Invalid state parameter. Authentication failed.');
         }
         
-        // Clear the state from session
+        // Get the code verifier from session
+        $codeVerifier = session('tiktok_code_verifier');
+        
+        // Clear the state and code verifier from session
         session()->forget('tiktok_state');
+        session()->forget('tiktok_code_verifier');
         
         // Check for error response
         if ($request->has('error')) {
@@ -71,12 +85,13 @@ class TikTokController extends Controller
         
         // Exchange authorization code for access token
         try {
-            $response = Http::post('https://open.tiktokapis.com/v2/oauth/token/', [
+            $response = Http::asForm()->post('https://open.tiktokapis.com/v2/oauth/token/', [
                 'client_key' => config('services.tiktok.client_id'),
                 'client_secret' => config('services.tiktok.client_secret'),
                 'code' => $request->code,
                 'grant_type' => 'authorization_code',
                 'redirect_uri' => config('services.tiktok.redirect'),
+                'code_verifier' => $codeVerifier,
             ]);
             
             $tokenData = $response->json();
@@ -88,7 +103,9 @@ class TikTokController extends Controller
             }
             
             // Get user info with the access token
-            $userResponse = Http::withToken($tokenData['access_token'])
+            $userResponse = Http::withHeaders([
+                    'Authorization' => 'Bearer ' . $tokenData['access_token']
+                ])
                 ->get('https://open.tiktokapis.com/v2/user/info/', [
                     'fields' => 'open_id,union_id,avatar_url,display_name,email'
                 ]);
@@ -168,7 +185,7 @@ class TikTokController extends Controller
     public function refreshToken($refreshToken)
     {
         try {
-            $response = Http::post('https://open.tiktokapis.com/v2/oauth/token/', [
+            $response = Http::asForm()->post('https://open.tiktokapis.com/v2/oauth/token/', [
                 'client_key' => config('services.tiktok.client_id'),
                 'client_secret' => config('services.tiktok.client_secret'),
                 'grant_type' => 'refresh_token',
