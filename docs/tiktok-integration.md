@@ -374,6 +374,13 @@ class TikTokController extends Controller
                     ->with('error', 'Failed to obtain access token from TikTok.');
             }
             
+            // Add this right after getting the token
+            Log::debug('TikTok token data', [
+                'token_prefix' => isset($tokenData['access_token']) ? substr($tokenData['access_token'], 0, 10) . '...' : 'missing',
+                'token_type' => $tokenData['token_type'] ?? 'missing',
+                'open_id' => $tokenData['open_id'] ?? 'missing'
+            ]);
+            
             // Get user info with the access token
             $userResponse = Http::withHeaders([
                     'Authorization' => 'Bearer ' . $tokenData['access_token']
@@ -386,6 +393,13 @@ class TikTokController extends Controller
             
             // Log the actual response for debugging
             Log::info('TikTok user data response', $userData);
+            
+            // Add this after the user info request
+            Log::debug('TikTok user info raw response', [
+                'status' => $userResponse->status(),
+                'body' => $userResponse->body(),
+                'json' => $userResponse->json()
+            ]);
             
             if (!isset($userData['data']) || !isset($userData['data']['user'])) {
                 Log::error('TikTok user info retrieval failed', ['response' => $userData]);

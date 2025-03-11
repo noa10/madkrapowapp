@@ -142,7 +142,7 @@ class TikTokController extends Controller
                     'Authorization' => 'Bearer ' . $tokenData['access_token']
                 ])
                 ->get('https://open.tiktokapis.com/v2/user/info/', [
-                    'fields' => 'open_id,union_id,avatar_url,display_name,username,is_verified'
+                    'fields' => 'open_id,display_name'
                 ]);
             
             $userData = $userResponse->json();
@@ -207,6 +207,14 @@ class TikTokController extends Controller
             ]);
             
             Auth::login($user);
+            
+            // Add this to your callback method after the user info request
+            $rateLimit = [
+                'limit' => $userResponse->header('X-RateLimit-Limit') ?? 'unknown',
+                'remaining' => $userResponse->header('X-RateLimit-Remaining') ?? 'unknown',
+                'reset' => $userResponse->header('X-RateLimit-Reset') ?? 'unknown',
+            ];
+            Log::info('TikTok rate limit info', $rateLimit);
             
             return redirect()->intended('/dashboard');
             
