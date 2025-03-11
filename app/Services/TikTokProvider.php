@@ -38,10 +38,17 @@ class TikTokProvider extends AbstractProvider implements ProviderInterface
         $this->parameters['code_challenge'] = $codeChallenge;
         $this->parameters['code_challenge_method'] = 'S256';
         
-        // Log the auth URL for debugging
+        // Make sure we're using client_key not client_id
+        $this->with(['client_key' => $this->clientId]);
+        
+        // Log the auth URL and parameters for debugging
         $url = 'https://www.tiktok.com/v2/auth/authorize/';
         $fullUrl = $this->buildAuthUrlFromBase($url, $state);
-        Log::info('TikTok Auth URL', ['url' => $fullUrl]);
+        Log::info('TikTok Auth URL', [
+            'url' => $fullUrl,
+            'client_key' => $this->clientId,
+            'parameters' => $this->parameters
+        ]);
         return $fullUrl;
     }
 

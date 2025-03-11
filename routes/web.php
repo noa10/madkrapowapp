@@ -305,3 +305,19 @@ Route::get('/facebook/data-deletion/status/{id}', [App\Http\Controllers\Facebook
 // TikTok OAuth routes
 Route::get('auth/tiktok', [App\Http\Controllers\Auth\TikTokController::class, 'redirect'])->name('auth.tiktok');
 Route::get('auth/tiktok/callback', [App\Http\Controllers\Auth\TikTokController::class, 'callback']);
+
+// TikTok Configuration Test Route
+Route::get('/test-tiktok-config', function() {
+    $clientKey = config('services.tiktok.client_id');
+    $clientSecret = config('services.tiktok.client_secret') ? '[SECRET MASKED]' : 'Not set';
+    $redirectUri = config('services.tiktok.redirect');
+    
+    return response()->json([
+        'tiktok_config' => [
+            'client_key' => $clientKey,
+            'client_secret_set' => !empty(config('services.tiktok.client_secret')),
+            'redirect_uri' => $redirectUri,
+        ],
+        'info' => 'Check if your client_key matches what you see in the TikTok Developer Portal'
+    ]);
+});

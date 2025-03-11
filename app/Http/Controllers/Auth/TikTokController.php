@@ -33,6 +33,12 @@ class TikTokController extends Controller
             '='
         ), '+/', '-_');
         
+        // Log the client key for debugging
+        Log::info('TikTok Auth Redirect', [
+            'client_key' => config('services.tiktok.client_id'),
+            'redirect_uri' => config('services.tiktok.redirect')
+        ]);
+        
         $query = http_build_query([
             'client_key' => config('services.tiktok.client_id'),
             'scope' => 'user.info.basic',
