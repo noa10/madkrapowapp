@@ -321,3 +321,98 @@ Route::get('/test-tiktok-config', function() {
         'info' => 'Check if your client_key matches what you see in the TikTok Developer Portal'
     ]);
 });
+
+// Direct TikTok Auth Test Route
+Route::get('/test-tiktok-redirect', function() {
+    $clientKey = config('services.tiktok.client_id');
+    $redirectUri = config('services.tiktok.redirect');
+    $state = \Illuminate\Support\Str::random(40);
+    $codeVerifier = \Illuminate\Support\Str::random(128);
+    
+    // Store state and code verifier in session
+    session(['tiktok_state' => $state]);
+    session(['tiktok_code_verifier' => $codeVerifier]);
+    
+    // Generate code challenge
+    $codeChallenge = strtr(rtrim(
+        base64_encode(hash('sha256', $codeVerifier, true)),
+        '='
+    ), '+/', '-_');
+    
+    // Build the URL
+    $url = 'https://www.tiktok.com/v2/auth/authorize';
+    $query = http_build_query([
+        'client_key' => $clientKey,
+        'scope' => 'user.info.basic',
+        'response_type' => 'code',
+        'redirect_uri' => $redirectUri,
+        'state' => $state,
+        'code_challenge' => $codeChallenge,
+        'code_challenge_method' => 'S256',
+    ]);
+    
+    $finalUrl = $url . '?' . $query;
+    
+    // Return the URL for inspection before redirecting
+    return response()->json([
+        'tiktok_auth_url' => $finalUrl,
+        'client_key' => $clientKey,
+        'redirect_uri' => $redirectUri,
+        'instructions' => 'Verify the client_key and redirect_uri, then manually visit the tiktok_auth_url'
+    ]);
+});
+
+// Simple TikTok Config Check
+Route::get('/check-tiktok-key', function() {
+    $envKey = env('TIKTOK_CLIENT_KEY');
+    $configKey = config('services.tiktok.client_id');
+    
+    return response()->json([
+        'direct_env_value' => $envKey,
+        'config_value' => $configKey,
+        'match' => $envKey === $configKey ? 'Values match' : 'Values DO NOT match'
+    ]);
+});
+
+// TikTok Direct Test (with hard-coded values)
+Route::get('/test-tiktok-direct', function() {
+    // Hard-coded values from TikTok Developer Portal
+    $clientKey = 'sbawslovnjuabyqhci';
+    $redirectUri = 'http://localhost/auth/tiktok/callback';
+    
+    // Generate all required parameters
+    $state = \Illuminate\Support\Str::random(40);
+    $codeVerifier = \Illuminate\Support\Str::random(128);
+    
+    // Store state and code verifier in session for validation
+    session(['tiktok_state' => $state]);
+    session(['tiktok_code_verifier' => $codeVerifier]);
+    
+    // Generate code challenge
+    $codeChallenge = strtr(rtrim(
+        base64_encode(hash('sha256', $codeVerifier, true)),
+        '='
+    ), '+/', '-_');
+    
+    // Build the URL directly
+    $url = 'https://www.tiktok.com/v2/auth/authorize';
+    $query = http_build_query([
+        'client_key' => $clientKey,
+        'scope' => 'user.info.basic',
+        'response_type' => 'code',
+        'redirect_uri' => $redirectUri,
+        'state' => $state,
+        'code_challenge' => $codeChallenge,
+        'code_challenge_method' => 'S256',
+    ]);
+    
+    $fullUrl = $url . '?' . $query;
+    
+    return view('tiktok-test', [
+        'tiktok_auth_url' => $fullUrl,
+        'client_key' => $clientKey,
+        'redirect_uri' => $redirectUri,
+        'encoded_redirect_uri' => urlencode($redirectUri),
+        'code_challenge' => $codeChallenge
+    ]);
+});

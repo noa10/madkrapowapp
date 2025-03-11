@@ -33,25 +33,36 @@ class TikTokController extends Controller
             '='
         ), '+/', '-_');
         
-        // Log the client key for debugging
-        Log::info('TikTok Auth Redirect', [
-            'client_key' => config('services.tiktok.client_id'),
-            'redirect_uri' => config('services.tiktok.redirect')
+        // HARD-CODE the client key to bypass env/config issues
+        $clientKey = 'sbawslovnjuabyqhci'; // Direct value from TikTok Developer Portal
+        $redirectUri = 'http://localhost/auth/tiktok/callback';
+        
+        // Log the configuration for debugging
+        Log::info('TikTok Auth Redirect Configuration', [
+            'client_key' => $clientKey,
+            'redirect_uri' => $redirectUri
         ]);
         
+        // Build the URL manually to ensure client_key is included
+        $url = 'https://www.tiktok.com/v2/auth/authorize';
         $query = http_build_query([
-            'client_key' => config('services.tiktok.client_id'),
+            'client_key' => $clientKey,
             'scope' => 'user.info.basic',
             'response_type' => 'code',
-            'redirect_uri' => config('services.tiktok.redirect'),
+            'redirect_uri' => $redirectUri,
             'state' => $state,
             'code_challenge' => $codeChallenge,
             'code_challenge_method' => 'S256',
         ]);
         
+        // Set the auth in progress flag
         session(['tiktok_auth_in_progress' => true]);
         
-        return redirect('https://www.tiktok.com/v2/auth/authorize?' . $query);
+        // Log the final URL
+        $finalUrl = $url . '?' . $query;
+        Log::info('TikTok Auth Redirect URL', ['url' => $finalUrl]);
+        
+        return redirect($finalUrl);
     }
     
     /**
@@ -91,16 +102,34 @@ class TikTokController extends Controller
         
         // Exchange authorization code for access token
         try {
+            // HARD-CODE client key and secret to bypass env/config issues
+            $clientKey = 'sbawslovnjuabyqhci'; // Direct value from TikTok Developer Portal
+            $clientSecret = 'ai16jwSrqktCaqHcKIGRIXWvF2TNrWFi';
+            $redirectUri = 'http://localhost/auth/tiktok/callback';
+            
+            // Log the token exchange request
+            Log::info('TikTok token exchange request', [
+                'code' => substr($request->code, 0, 10) . '...',
+                'redirect_uri' => $redirectUri
+            ]);
+            
             $response = Http::asForm()->post('https://open.tiktokapis.com/v2/oauth/token/', [
-                'client_key' => config('services.tiktok.client_id'),
-                'client_secret' => config('services.tiktok.client_secret'),
+                'client_key' => $clientKey,
+                'client_secret' => $clientSecret,
                 'code' => $request->code,
                 'grant_type' => 'authorization_code',
-                'redirect_uri' => config('services.tiktok.redirect'),
+                'redirect_uri' => $redirectUri,
                 'code_verifier' => $codeVerifier,
             ]);
             
             $tokenData = $response->json();
+            
+            // Log the token response (without exposing the full token)
+            Log::info('TikTok token exchange response', [
+                'success' => isset($tokenData['access_token']),
+                'has_open_id' => isset($tokenData['open_id']),
+                'error' => $tokenData['error'] ?? null
+            ]);
             
             if (!isset($tokenData['access_token'])) {
                 Log::error('TikTok token exchange failed', ['response' => $tokenData]);
@@ -113,10 +142,13 @@ class TikTokController extends Controller
                     'Authorization' => 'Bearer ' . $tokenData['access_token']
                 ])
                 ->get('https://open.tiktokapis.com/v2/user/info/', [
-                    'fields' => 'open_id,union_id,avatar_url,display_name,email'
+                    'fields' => 'open_id,union_id,avatar_url,display_name,username,is_verified'
                 ]);
             
             $userData = $userResponse->json();
+            
+            // Log the actual response for debugging
+            Log::info('TikTok user data response', $userData);
             
             if (!isset($userData['data']) || !isset($userData['data']['user'])) {
                 Log::error('TikTok user info retrieval failed', ['response' => $userData]);
@@ -125,6 +157,13 @@ class TikTokController extends Controller
             }
             
             $tikTokUser = $userData['data']['user'];
+            
+            // Ensure we have the minimum required fields
+            if (!isset($tikTokUser['open_id'])) {
+                Log::error('TikTok user data missing open_id', ['tiktok_user' => $tikTokUser]);
+                return redirect()->route('register')
+                    ->with('error', 'TikTok user data is incomplete. Please try again.');
+            }
             
             // Find or create user
             $socialAccount = SocialAccount::where('provider', 'tiktok')

@@ -34,21 +34,29 @@ class TikTokProvider extends AbstractProvider implements ProviderInterface
             '='
         ), '+/', '-_');
         
-        // Add code challenge parameters to the query
-        $this->parameters['code_challenge'] = $codeChallenge;
-        $this->parameters['code_challenge_method'] = 'S256';
-        
-        // Make sure we're using client_key not client_id
-        $this->with(['client_key' => $this->clientId]);
-        
-        // Log the auth URL and parameters for debugging
+        // We'll handle the URL building ourselves to ensure client_key is used
         $url = 'https://www.tiktok.com/v2/auth/authorize/';
-        $fullUrl = $this->buildAuthUrlFromBase($url, $state);
+        
+        // Create query params manually
+        $query = http_build_query([
+            'client_key' => $this->clientId,
+            'scope' => $this->formatScopes($this->scopes, $this->scopeSeparator),
+            'response_type' => 'code',
+            'redirect_uri' => $this->redirectUrl,
+            'state' => $state,
+            'code_challenge' => $codeChallenge,
+            'code_challenge_method' => 'S256',
+        ]);
+        
+        $fullUrl = $url . '?' . $query;
+        
+        // Log the full URL and parameters
         Log::info('TikTok Auth URL', [
             'url' => $fullUrl,
             'client_key' => $this->clientId,
-            'parameters' => $this->parameters
+            'redirect_uri' => $this->redirectUrl
         ]);
+        
         return $fullUrl;
     }
 
@@ -66,17 +74,25 @@ class TikTokProvider extends AbstractProvider implements ProviderInterface
     protected function getUserByToken($token)
     {
         try {
+            Log::info('Getting TikTok user info with token', ['token_prefix' => substr($token, 0, 10) . '...']);
+            
             $response = $this->getHttpClient()->get('https://open.tiktokapis.com/v2/user/info/', [
                 'headers' => [
                     'Authorization' => 'Bearer ' . $token,
+                    'Content-Type' => 'application/json',
                 ],
                 'query' => [
-                    'fields' => 'open_id,union_id,avatar_url,avatar_url_100,avatar_url_200,display_name,bio_description,profile_deep_link,is_verified,follower_count,following_count,likes_count',
+                    'fields' => 'open_id,union_id,avatar_url,display_name,username,is_verified',
                 ],
             ]);
 
             $userData = json_decode($response->getBody(), true);
             Log::info('TikTok User Data Response', ['data' => $userData]);
+            
+            // Check if the response contains the expected data structure
+            if (!isset($userData['data']) || !isset($userData['data']['user'])) {
+                Log::error('TikTok user data missing expected structure', ['response' => $userData]);
+            }
             
             return $userData;
         } catch (\Exception $e) {
@@ -95,7 +111,17 @@ class TikTokProvider extends AbstractProvider implements ProviderInterface
     {
         Log::info('Mapping TikTok user to object', ['raw_user' => $user]);
         
-        $userData = $user['data'] ?? [];
+        // Extract user data from the nested structure
+        $userData = isset($user['data']) && isset($user['data']['user']) 
+            ? $user['data']['user'] 
+            : [];
+        
+        // If we don't have the expected data, log an error
+        if (empty($userData)) {
+            Log::error('TikTok user data is empty or missing expected structure', [
+                'user' => $user
+            ]);
+        }
         
         return (new User)->setRaw($user)->map([
             'id' => $userData['open_id'] ?? null,
@@ -137,7 +163,10 @@ class TikTokProvider extends AbstractProvider implements ProviderInterface
     public function getAccessTokenResponse($code)
     {
         try {
-            Log::info('Getting TikTok access token', ['code' => $code]);
+            Log::info('Getting TikTok access token', [
+                'code' => $code,
+                'client_key' => $this->clientId
+            ]);
             
             $response = $this->getHttpClient()->post($this->getTokenUrl(), [
                 'headers' => [
