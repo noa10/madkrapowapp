@@ -270,7 +270,7 @@ class TikTokController extends Controller
             '='
         ), '+/', '-_');
         
-        // Get the client key from configuration
+        // Get client key and redirect URI from config (services.php) which pulls from .env
         $clientKey = config('services.tiktok.client_id');
         $redirectUri = config('services.tiktok.redirect');
         
@@ -339,18 +339,23 @@ class TikTokController extends Controller
         
         // Exchange authorization code for access token
         try {
+            // Get client key, secret and redirect URI from config (services.php) which pulls from .env
+            $clientKey = config('services.tiktok.client_id');
+            $clientSecret = config('services.tiktok.client_secret');
+            $redirectUri = config('services.tiktok.redirect');
+            
             // Log the token exchange request
             Log::info('TikTok token exchange request', [
                 'code' => substr($request->code, 0, 10) . '...',
-                'redirect_uri' => config('services.tiktok.redirect')
+                'redirect_uri' => $redirectUri
             ]);
             
             $response = Http::asForm()->post('https://open.tiktokapis.com/v2/oauth/token/', [
-                'client_key' => config('services.tiktok.client_id'),
-                'client_secret' => config('services.tiktok.client_secret'),
+                'client_key' => $clientKey,
+                'client_secret' => $clientSecret,
                 'code' => $request->code,
                 'grant_type' => 'authorization_code',
-                'redirect_uri' => config('services.tiktok.redirect'),
+                'redirect_uri' => $redirectUri,
                 'code_verifier' => $codeVerifier,
             ]);
             
@@ -510,6 +515,15 @@ TikTok requires PKCE (Proof Key for Code Exchange) for OAuth 2.0 authorization, 
 3. Send the code challenge with the authorization request
 4. Include the original code verifier in the token exchange request
 
+### Credential Management
+
+This implementation follows Laravel best practices for credential management:
+
+1. Store all sensitive credentials in the `.env` file
+2. Access credentials through Laravel's configuration system
+3. Never hardcode credentials in the codebase
+4. Use config() helper to access credentials consistently
+
 ### Error Handling
 
 The implementation includes comprehensive error handling and logging:
@@ -524,12 +538,14 @@ The implementation includes comprehensive error handling and logging:
 ### Common Issues
 
 1. **client_key error (error code 10003)**
-   - Ensure your client key matches exactly what's in the TikTok Developer Portal
+   - Ensure your client key in .env matches exactly what's in the TikTok Developer Portal
    - Check that the client_key parameter is included in the authorization URL
+   - Verify that services.php is properly configured to read TIKTOK_CLIENT_KEY
 
 2. **Redirect URI error**
-   - Verify that the redirect URI in your TikTok Developer Portal exactly matches your configured URI
+   - Verify that the redirect URI in your TikTok Developer Portal exactly matches your configured URI in .env
    - Note that TikTok doesn't allow localhost in production apps
+   - Make sure your TIKTOK_REDIRECT_URI in .env matches what's registered in the TikTok Developer Portal
 
 3. **User data retrieval issues**
    - Check that you're requesting valid fields in the user info request

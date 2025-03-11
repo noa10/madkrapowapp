@@ -33,10 +33,10 @@ class TikTokController extends Controller
             '='
         ), '+/', '-_');
         
-        // HARD-CODE the client key to bypass env/config issues
-        $clientKey = 'sbawslovnjuabyqhci'; // Direct value from TikTok Developer Portal
-        $redirectUri = 'http://localhost/auth/tiktok/callback';
-        
+        // Get client key and redirect URI from config (services.php) which pulls from .env
+        $clientKey = config('services.tiktok.client_id');
+        $redirectUri = config('services.tiktok.redirect');
+          
         // Log the configuration for debugging
         Log::info('TikTok Auth Redirect Configuration', [
             'client_key' => $clientKey,
@@ -102,10 +102,10 @@ class TikTokController extends Controller
         
         // Exchange authorization code for access token
         try {
-            // HARD-CODE client key and secret to bypass env/config issues
-            $clientKey = 'sbawslovnjuabyqhci'; // Direct value from TikTok Developer Portal
-            $clientSecret = 'ai16jwSrqktCaqHcKIGRIXWvF2TNrWFi';
-            $redirectUri = 'http://localhost/auth/tiktok/callback';
+            // Get client key, secret and redirect URI from config (services.php) which pulls from .env
+            $clientKey = config('services.tiktok.client_id');
+            $clientSecret = config('services.tiktok.client_secret');
+            $redirectUri = config('services.tiktok.redirect');
             
             // Log the token exchange request
             Log::info('TikTok token exchange request', [

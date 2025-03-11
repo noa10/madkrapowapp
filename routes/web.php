@@ -160,9 +160,7 @@ Route::get('auth/google/callback', [App\Http\Controllers\Auth\GoogleController::
 Route::get('auth/facebook', [App\Http\Controllers\Auth\FacebookController::class, 'redirectToFacebook'])->name('auth.facebook');
 Route::get('auth/facebook/callback', [App\Http\Controllers\Auth\FacebookController::class, 'handleFacebookCallback']);
 
-// TikTok login
-Route::get('auth/tiktok', [App\Http\Controllers\Auth\TikTokController::class, 'redirectToTikTok'])->name('auth.tiktok');
-Route::get('auth/tiktok/callback', [App\Http\Controllers\Auth\TikTokController::class, 'handleTikTokCallback']);
+// TikTok error route (keeping this as it might be used)
 Route::get('auth/tiktok/error', function(Request $request) {
     Log::error('TikTok auth error redirect', [
         'params' => $request->all(),
@@ -170,6 +168,11 @@ Route::get('auth/tiktok/error', function(Request $request) {
     ]);
     return redirect()->route('login')->with('error', 'TikTok authentication failed: ' . ($request->get('error_string') ?? $request->get('error')));
 })->name('auth.tiktok.error');
+
+// TikTok Authentication Routes
+// TikTok OAuth routes
+Route::get('auth/tiktok', [App\Http\Controllers\Auth\TikTokController::class, 'redirect'])->name('auth.tiktok');
+Route::get('auth/tiktok/callback', [App\Http\Controllers\Auth\TikTokController::class, 'callback']);
 
 // Add this debugging route
 Route::get('/debug-google', function() {
@@ -299,13 +302,6 @@ Route::post('/facebook/data-deletion', [App\Http\Controllers\FacebookDataDeletio
 Route::get('/facebook/data-deletion/status/{id}', [App\Http\Controllers\FacebookDataDeletionController::class, 'showStatus'])
     ->name('facebook.data-deletion.status');
 
-// TikTok Authentication Routes
-// Make sure these routes are defined
-// Should be:
-// TikTok OAuth routes
-Route::get('auth/tiktok', [App\Http\Controllers\Auth\TikTokController::class, 'redirect'])->name('auth.tiktok');
-Route::get('auth/tiktok/callback', [App\Http\Controllers\Auth\TikTokController::class, 'callback']);
-
 // TikTok Configuration Test Route
 Route::get('/test-tiktok-config', function() {
     $clientKey = config('services.tiktok.client_id');
@@ -374,11 +370,11 @@ Route::get('/check-tiktok-key', function() {
     ]);
 });
 
-// TikTok Direct Test (with hard-coded values)
+// TikTok Direct Test (with configuration values)
 Route::get('/test-tiktok-direct', function() {
-    // Hard-coded values from TikTok Developer Portal
-    $clientKey = 'sbawslovnjuabyqhci';
-    $redirectUri = 'http://localhost/auth/tiktok/callback';
+    // Get values from config
+    $clientKey = config('services.tiktok.client_id');
+    $redirectUri = config('services.tiktok.redirect');
     
     // Generate all required parameters
     $state = \Illuminate\Support\Str::random(40);
