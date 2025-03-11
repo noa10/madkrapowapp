@@ -181,45 +181,24 @@
                             <div class="card mb-3">
                                 <div class="card-body">
                                     <div class="form-check">
-                                        <input class="form-check-input payment-method-radio" type="radio" name="payment_method" id="payment_credit_card" value="credit_card" checked>
-                                        <label class="form-check-label" for="payment_credit_card">
+                                        <input class="form-check-input payment-method-radio" type="radio" name="payment_method" id="payment_billplz" value="billplz" checked>
+                                        <label class="form-check-label" for="payment_billplz">
                                             <div class="d-flex align-items-center">
                                                 <div class="me-3">
                                                     <i class="bi bi-credit-card fs-4"></i>
                                                 </div>
                                                 <div>
-                                                    <strong>Credit/Debit Card</strong>
-                                            <p class="text-muted mb-0 small">FPX Online Banking (Maybank, CIMB, Public Bank)</p>
+                                                    <strong>Billplz Payment</strong>
+                                                    <p class="text-muted mb-0 small">Secure payments via Billplz - Credit/Debit Cards, Online Banking, E-Wallets</p>
                                                 </div>
                                             </div>
                                         </label>
                                     </div>
                                     
-                                    <div id="credit-card-form" class="mt-3 ps-4">
+                                    <div id="billplz-info" class="mt-3 ps-4">
                                         <div class="alert alert-info">
-                                            <i class="bi bi-shield-lock"></i> Secure payment processing powered by Stripe
+                                            <i class="bi bi-shield-lock"></i> You will be redirected to Billplz secure payment gateway after submitting your order.
                                         </div>
-                                        <div id="card-element" class="form-control"></div>
-                        <div id="card-errors" role="alert" class="invalid-feedback mt-2" style="display: none;"></div>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="card mb-3">
-                                <div class="card-body">
-                                    <div class="form-check">
-                                        <input class="form-check-input payment-method-radio" type="radio" name="payment_method" id="payment_online_banking" value="online_banking">
-                                        <label class="form-check-label" for="payment_online_banking">
-                                            <div class="d-flex align-items-center">
-                                                <div class="me-3">
-                                                    <i class="bi bi-bank fs-4"></i>
-                                                </div>
-                                                <div>
-                                                    <strong>Online Banking</strong>
-                                            <p class="text-muted mb-0 small">Instant bank redirect (FPX)</p>
-                                                </div>
-                                            </div>
-                                        </label>
                                     </div>
                                 </div>
                             </div>
@@ -288,4 +267,91 @@
         </div>
     </div>
 </div>
+@endsection
+
+@section('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Shipping calculation
+        const standardShippingRadio = document.getElementById('shipping_standard');
+        const expressShippingRadio = document.getElementById('shipping_express');
+        const shippingCostDisplay = document.getElementById('shipping-cost');
+        const totalAmountDisplay = document.getElementById('total-amount');
+        const subtotalElement = document.getElementById('subtotal');
+        const useProfileAddressCheckbox = document.getElementById('use_profile_address');
+        const shippingFormDiv = document.getElementById('shipping-form');
+        const profileAddressDisplay = document.getElementById('profile-address-display');
+        const submitBtn = document.getElementById('submit-btn');
+        const spinner = document.getElementById('spinner');
+        const submitText = document.querySelector('.submit-text');
+        
+        // Extract the subtotal value
+        const subtotalText = subtotalElement ? subtotalElement.textContent : 'RM 0.00';
+        const subtotal = parseFloat(subtotalText.replace('RM ', '').replace(',', ''));
+        
+        // Extract shipping costs
+        const standardShippingFee = {{ $standardShippingFee }};
+        const expressShippingFee = {{ $expressShippingFee }};
+        const freeShippingThreshold = 100.00;
+        
+        // Function to update the total
+        function updateTotal() {
+            let shippingCost = 0;
+            
+            if (expressShippingRadio.checked) {
+                shippingCost = expressShippingFee;
+                shippingCostDisplay.textContent = `RM ${expressShippingFee.toFixed(2)}`;
+            } else {
+                if (subtotal >= freeShippingThreshold) {
+                    shippingCostDisplay.innerHTML = '<span class="text-success">Free</span>';
+                } else {
+                    shippingCost = standardShippingFee;
+                    shippingCostDisplay.textContent = `RM ${standardShippingFee.toFixed(2)}`;
+                }
+            }
+            
+            const total = subtotal + shippingCost;
+            totalAmountDisplay.textContent = `RM ${total.toFixed(2)}`;
+        }
+        
+        // Add event listeners for shipping method changes
+        if (standardShippingRadio && expressShippingRadio) {
+            standardShippingRadio.addEventListener('change', updateTotal);
+            expressShippingRadio.addEventListener('change', updateTotal);
+        }
+        
+        // Toggle shipping form based on profile address checkbox
+        if (useProfileAddressCheckbox && shippingFormDiv) {
+            useProfileAddressCheckbox.addEventListener('change', function() {
+                if (this.checked) {
+                    shippingFormDiv.classList.add('d-none');
+                    if (profileAddressDisplay) {
+                        profileAddressDisplay.classList.remove('d-none');
+                    }
+                } else {
+                    shippingFormDiv.classList.remove('d-none');
+                    if (profileAddressDisplay) {
+                        profileAddressDisplay.classList.add('d-none');
+                    }
+                }
+            });
+        }
+        
+        // Handle form submission
+        const checkoutForm = document.getElementById('checkout-form');
+        if (checkoutForm) {
+            checkoutForm.addEventListener('submit', function(e) {
+                // Show loading spinner
+                if (submitBtn && spinner && submitText) {
+                    submitBtn.disabled = true;
+                    spinner.classList.remove('d-none');
+                    submitText.textContent = 'Processing...';
+                }
+                
+                // The form will submit normally to the server
+                // No need to handle Stripe payment here
+            });
+        }
+    });
+</script>
 @endsection

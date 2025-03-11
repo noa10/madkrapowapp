@@ -11,13 +11,21 @@ use App\Models\MadkrapowShipping;
 use App\Models\MadkrapowPayment;
 use App\Models\MadkrapowCartItem;
 use App\Models\MadkrapowProduct;
+use App\Services\BillplzService;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
 
 class CheckoutController extends Controller
 {
     protected $standardShippingFee = 10.00;
     protected $expressShippingFee = 20.00;
     protected $freeShippingThreshold = 100.00;
+    protected $billplzService;
+
+    public function __construct(BillplzService $billplzService)
+    {
+        $this->billplzService = $billplzService;
+    }
 
     public function index()
     {
@@ -36,17 +44,8 @@ class CheckoutController extends Controller
         $shippingCost = ($subtotal >= $this->freeShippingThreshold) ? 0 : $standardShippingFee;
         $totalAmount = $subtotal + $shippingCost;
         
-        \Stripe\Stripe::setApiKey(config('services.stripe.secret'));
-        $paymentIntent = \Stripe\PaymentIntent::create([
-            'amount' => $totalAmount * 100, // amount in cents
-            'currency' => 'myr',
-            'payment_method_types' => ['card'],
-            // Remove the return_url since we're not confirming the payment yet
-        ]);
-        $clientSecret = $paymentIntent->client_secret;
-        
         // Add shippingFee to the view data
-        return view('checkout.index', compact('subtotal', 'standardShippingFee', 'expressShippingFee', 'clientSecret'));
+        return view('checkout.index', compact('subtotal', 'standardShippingFee', 'expressShippingFee'));
     }
 
     public function process(Request $request)
@@ -61,6 +60,11 @@ class CheckoutController extends Controller
 
         $shippingCost = $request->shipping_method === 'express' ? $this->expressShippingFee : $this->standardShippingFee;
 
+        // Apply free shipping if over threshold
+        if ($request->shipping_method === 'standard' && $subtotal >= $this->freeShippingThreshold) {
+            $shippingCost = 0;
+        }
+
         $totalAmount = $subtotal + $shippingCost;
 
         DB::beginTransaction();
@@ -72,6 +76,7 @@ class CheckoutController extends Controller
             $order->order_date = Carbon::now();
             $order->total_amount = $totalAmount;
             $order->status = 'pending';
+            $order->order_number = 'MK' . time() . mt_rand(1000, 9999); // Generate unique order number
             
             // Store calculated shipping cost
             $order->shipping_cost = $shippingCost;
@@ -79,11 +84,11 @@ class CheckoutController extends Controller
                 throw new \Exception('Order not saved successfully. Validation: ' . json_encode($order->getErrors()));
             }
 
-            \Log::info('Order created with ID: ' . $order->order_id); // Changed from $order->id to $order->order_id
+            Log::info('Order created with ID: ' . $order->order_id);
 
             // Create shipping record with address details
             $shipping = new MadkrapowShipping();
-            $shipping->order_id = $order->order_id; // Changed from $order->id to $order->order_id
+            $shipping->order_id = $order->order_id;
             
             // Check if using profile address
             if ($request->has('use_profile_address') && $request->use_profile_address == 1) {
@@ -114,71 +119,25 @@ class CheckoutController extends Controller
                 throw new \Exception('Shipping info not saved: ' . json_encode($shipping->getErrors()));
             }
 
-            // Process Stripe payment
-            \Stripe\Stripe::setApiKey(config('services.stripe.secret'));
-            
-            // Handle different payment methods
-            if ($request->payment_method === 'credit_card') {
-                // Check if we have a payment method from the request
-                if (!$request->has('stripePaymentMethod')) {
-                    throw new \Exception('No payment method provided');
-                }
-                
-                $paymentIntent = \Stripe\PaymentIntent::create([
-                    'amount' => $totalAmount * 100, // Convert to cents
-                    'currency' => 'myr',
-                    'payment_method' => $request->stripePaymentMethod,
-                    'confirmation_method' => 'manual',
-                    'confirm' => true,
-                    'return_url' => route('checkout.confirmation', ['id' => $order->order_id]), // Changed from $order->id
-                    'metadata' => [
-                        'order_id' => $order->order_id, // Changed from $order->id
-                        'user_id' => Auth::id()
-                    ]
-                ]);
-
-                if ($paymentIntent->status !== 'succeeded') {
-                    throw new \Exception('Payment failed: ' . $paymentIntent->last_payment_error->message);
-                }
-
-                // Create payment record with Stripe reference (around line 144-145)
-                $payment = new MadkrapowPayment();
-                $payment->order_id = $order->order_id; // Changed from $order->id
-                $payment->payment_date = Carbon::now();
-                $payment->amount = $totalAmount;
-                $payment->payment_method = 'stripe';
-                $payment->stripe_payment_id = $paymentIntent->id;
-                $payment->status = 'completed';
-            } else if ($request->payment_method === 'online_banking') {
-                // For online banking, we'll create a pending payment that will be updated later
-                $payment = new MadkrapowPayment();
-                $payment->order_id = $order->order_id; // Changed from $order->id
-                $payment->payment_date = null; // Will be set when payment is confirmed
-                $payment->amount = $totalAmount;
-                $payment->payment_method = 'bank_transfer';
-                $payment->status = 'pending';
-            } else {
-                throw new \Exception('Invalid payment method');
-            }
-            
+            // Create payment record for Billplz (pending)
+            $payment = new MadkrapowPayment();
+            $payment->order_id = $order->order_id;
+            $payment->payment_date = null; // Will be set when payment is confirmed
+            $payment->amount = $totalAmount;
+            $payment->payment_method = 'billplz';
+            $payment->status = 'pending';
             $payment->save();
 
             // Create order items and update product stock atomically
             foreach ($cartItems as $item) {
                 $orderItem = new MadkrapowOrderItem();
-                $orderItem->order_id = $order->order_id; // Changed from $order->id
+                $orderItem->order_id = $order->order_id;
                 $orderItem->product_id = $item->product_id;
                 $orderItem->quantity = $item->quantity;
                 $orderItem->price_at_purchase = $item->product->price;
                 $orderItem->save();
 
                 // Atomic stock decrement
-                // Find where the product stock is being updated, likely in the process method
-                // Change this:
-                $product = MadkrapowProduct::find($item->product_id);
-                $product->decrement('stock_quantity', $item->quantity);
-                
-                // To this:
                 $product = MadkrapowProduct::where('product_id', $item->product_id)->first();
                 if ($product) {
                     $product->decrement('stock_quantity', $item->quantity);
@@ -191,19 +150,41 @@ class CheckoutController extends Controller
             // Commit the transaction
             DB::commit();
 
-            // At the end of the try block (around line 196)
-            return redirect()->route('checkout.confirmation', ['id' => $order->order_id]); // Changed from $order->id
+            // Store order ID in session for callback reference
+            session(['billplz_order_id' => $order->order_number]);
+            session(['billplz_pending_order_id' => $order->getKey()]); // Use getKey() to get the primary key value
+            
+            // Debug order values
+            Log::info('Order before redirect', [
+                'primary_key' => $order->getKey(), // This will get the value of the primary key (order_id)
+                'order_number' => $order->order_number ?? 'N/A'
+            ]);
+            
+            // Use the primary key for redirection
+            $primaryKey = $order->getKey();
+            
+            if (empty($primaryKey)) {
+                throw new \Exception('Order primary key is null - cannot proceed with payment');
+            }
+            
+            // Redirect using the query parameter with the primary key
+            return redirect("/payments/billplz/initiate?orderId={$primaryKey}");
+            
         } catch (\Exception $e) {
             DB::rollback();
-            \Log::error('Checkout error: ' . $e->getMessage());
+            Log::error('Checkout error: ' . $e->getMessage());
             return redirect()->route('checkout.index')->with('error', 'Checkout failed: ' . $e->getMessage());
         }
     }
 
     public function confirmation($id)
     {
+        // Try to find order by id first, then by order_id if that fails
         $order = MadkrapowOrder::with(['user', 'orderItems.product', 'shipping', 'payment'])
-            ->where('order_id', $id) // Changed from 'id' to 'order_id'
+            ->where(function($query) use ($id) {
+                $query->where('id', $id)
+                    ->orWhere('order_id', $id);
+            })
             ->where('user_id', Auth::id())
             ->firstOrFail();
     

@@ -81,6 +81,36 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/orders/{id}', [OrderController::class, 'show'])->name('orders.show');
     Route::post('/orders/{id}/cancel', [OrderController::class, 'cancel'])->name('orders.cancel');
     Route::get('/orders/{id}/track', [OrderController::class, 'track'])->name('orders.track');
+
+    // Billplz payment routes
+    Route::get('/payments/billplz/initiate', 
+        [App\Http\Controllers\PaymentController::class, 'initiateBillplzPayment'])
+        ->name('payments.billplz.initiate');
+    
+    Route::get('/payments/billplz/return', 
+        [App\Http\Controllers\PaymentController::class, 'handleBillplzReturn'])
+        ->name('payments.billplz.return');
+    
+    Route::post('/payments/billplz/webhook', 
+        [App\Http\Controllers\PaymentController::class, 'handleBillplzWebhook'])
+        ->name('billplz.webhook');
+    
+    Route::get('/payments/success/{orderId}', 
+        [App\Http\Controllers\PaymentController::class, 'paymentSuccess'])
+        ->name('payments.success')
+        ->where('orderId', '[0-9]+');
+    
+    Route::get('/payments/failed/{orderId}', 
+        [App\Http\Controllers\PaymentController::class, 'paymentFailed'])
+        ->name('payments.failed')
+        ->where('orderId', '[0-9]+');
+
+    // Test routes for Billplz
+    Route::get('/test/billplz', function() {
+        return view('test-billplz');
+    })->name('test.billplz');
+    Route::get('/test/billplz/connection', [App\Http\Controllers\PaymentController::class, 'testBillplzConnection'])->name('test.billplz.connection');
+    Route::post('/test/billplz/create', [App\Http\Controllers\PaymentController::class, 'createTestBillplzBill'])->name('test.billplz.create');
 });
 
 // Admin routes (should be protected by admin middleware in a real application)

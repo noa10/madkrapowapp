@@ -23,6 +23,8 @@ class MadkrapowPayment extends Model
         'amount',
         'payment_method',
         'status',
+        'reference_id',
+        'transaction_details',
     ];
 
     /**
@@ -33,6 +35,7 @@ class MadkrapowPayment extends Model
     protected $casts = [
         'payment_date' => 'datetime',
         'amount' => 'decimal:2',
+        'transaction_details' => 'array',
     ];
 
     /**
