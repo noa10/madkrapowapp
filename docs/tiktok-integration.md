@@ -4,7 +4,7 @@ This document provides comprehensive documentation for integrating TikTok Login 
 
 ## Overview
 
-TikTok Login integration allows users to authenticate using their TikTok accounts, enabling single sign-on functionality and access to basic TikTok profile information.
+TikTok Login integration allows users to authenticate using their TikTok accounts, enabling single sign-on functionality and access to basic TikTok profile information. After successful authentication, users are redirected to the dashboard at `madkrapow.com/dashboard`.
 
 ## Prerequisites
 
@@ -62,6 +62,10 @@ Add these routes to your `routes/web.php` file:
 // TikTok Authentication Routes
 Route::get('auth/tiktok', [App\Http\Controllers\Auth\TikTokController::class, 'redirect'])->name('auth.tiktok');
 Route::get('auth/tiktok/callback', [App\Http\Controllers\Auth\TikTokController::class, 'callback']);
+
+// Social Login Email Collection Routes (required for TikTok since it doesn't provide emails)
+Route::get('/auth/{provider}/email', [App\Http\Controllers\Auth\SocialEmailController::class, 'showEmailForm'])->name('social.email.form');
+Route::post('/auth/{provider}/email', [App\Http\Controllers\Auth\SocialEmailController::class, 'processEmailForm'])->name('social.email.process');
 ```
 
 ### TikTok Service Provider
@@ -603,4 +607,136 @@ Note that TikTok doesn't provide email addresses through their API.
 
 - [TikTok Login Kit Documentation](https://developers.tiktok.com/doc/login-kit-overview/)
 - [OAuth User Access Token Management](https://developers.tiktok.com/doc/oauth-user-access-token-management)
-- [TikTok API Error Codes](https://developers.tiktok.com/doc/error-codes) 
+- [TikTok API Error Codes](https://developers.tiktok.com/doc/error-codes)
+
+## User Flow
+
+The complete TikTok authentication flow works as follows:
+
+1. User clicks the "Login with TikTok" button
+2. User is redirected to TikTok's authentication page
+3. User authenticates with TikTok and approves permissions
+4. User is redirected back to our callback URL
+5. For new users, since TikTok doesn't provide email:
+   - User is redirected to the email collection form (`social.email.form` route)
+   - User enters their email address
+   - System creates a new user account and links it to the TikTok profile
+6. For returning users, the system finds their existing account by TikTok ID
+7. User is logged in and redirected to the dashboard at `madkrapow.com/dashboard`
+
+## Email Collection Form
+
+Since TikTok doesn't provide email addresses through their API, a custom email collection form is implemented. This form is displayed for new users after they authenticate with TikTok.
+
+The implementation includes:
+- A dedicated route (`social.email.form`)
+- A controller that handles the form display and submission (`SocialEmailController`)
+- A view template that collects the email address (`resources/views/auth/social-email.blade.php`)
+- Validation to ensure the email is valid and not already in use
+
+## Social Account Model
+
+A `SocialAccount` model is used to store the connection between a user and their TikTok account:
+
+```php
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+
+class SocialAccount extends Model
+{
+    use HasFactory;
+
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var array
+     */
+    protected $fillable = [
+        'user_id',
+        'provider',
+        'provider_user_id',
+        'token',
+        'refresh_token',
+        'token_expires_at',
+    ];
+
+    /**
+     * The attributes that should be cast.
+     *
+     * @var array
+     */
+    protected $casts = [
+        'token_expires_at' => 'datetime',
+    ];
+
+    /**
+     * Get the user that owns the social account.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id', 'user_id');
+    }
+}
+```
+
+## Database Configuration
+
+The `social_accounts` table must be properly configured with the correct foreign key constraint:
+
+```php
+Schema::create('social_accounts', function (Blueprint $table) {
+    $table->id();
+    $table->unsignedBigInteger('user_id');
+    $table->string('provider');
+    $table->string('provider_user_id');
+    $table->string('token')->nullable();
+    $table->string('refresh_token')->nullable();
+    $table->timestamp('token_expires_at')->nullable();
+    $table->timestamps();
+    
+    // Create a unique index on provider and provider_user_id
+    $table->unique(['provider', 'provider_user_id']);
+    
+    // Set the correct foreign key constraint to madkrapow_users table
+    $table->foreign('user_id')
+          ->references('user_id')
+          ->on('madkrapow_users')
+          ->onDelete('cascade');
+});
+```
+
+If you encounter a foreign key constraint error, ensure that the constraint points to the correct table and primary key column. You may need to run the following SQL to fix it:
+
+```sql
+-- Drop the existing foreign key constraint
+ALTER TABLE `social_accounts` DROP FOREIGN KEY `social_accounts_user_id_foreign`;
+
+-- Add the new foreign key constraint that points to the correct table and column
+ALTER TABLE `social_accounts` 
+ADD CONSTRAINT `social_accounts_user_id_foreign` 
+FOREIGN KEY (`user_id`) REFERENCES `madkrapow_users` (`user_id`) 
+ON DELETE CASCADE;
+```
+
+## Post-Authentication Flow
+
+After a successful authentication:
+
+1. For new users:
+   - A new user record is created in the `madkrapow_users` table
+   - A new social account record is created in the `social_accounts` table
+   - The user is automatically logged in
+
+2. For returning users:
+   - The user is authenticated based on their linked social account
+   - Their access token is updated if needed
+
+3. For all users:
+   - The user is redirected to the dashboard at `madkrapow.com/dashboard`
+   - The session is updated with user authentication information 
