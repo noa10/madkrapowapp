@@ -412,3 +412,7 @@ Route::get('/test-tiktok-direct', function() {
         'code_challenge' => $codeChallenge
     ]);
 });
+
+// Social Login Email Collection
+Route::get('/auth/{provider}/email', [App\Http\Controllers\Auth\SocialEmailController::class, 'showEmailForm'])->name('social.email.form');
+Route::post('/auth/{provider}/email', [App\Http\Controllers\Auth\SocialEmailController::class, 'processEmailForm'])->name('social.email.process');
