@@ -66,16 +66,22 @@ class SocialEmailController extends Controller
             'password' => bcrypt(Str::random(24)),
         ]);
         
-        // Create the social account link
-        $user->socialAccounts()->create([
-            'provider' => $provider,
-            'provider_user_id' => $socialData['open_id'],
-            'token' => $tokenData['access_token'] ?? null,
-            'refresh_token' => $tokenData['refresh_token'] ?? null,
-            'token_expires_at' => isset($tokenData['expires_in']) 
-                ? now()->addSeconds($tokenData['expires_in']) 
-                : null,
-        ]);
+        // Create the social account link - fix the column name issue
+        if ($user) {
+            $socialAccount = new SocialAccount([
+                'provider' => $provider,
+                'provider_user_id' => $socialData['open_id'],
+                'token' => $tokenData['access_token'] ?? null,
+                'refresh_token' => $tokenData['refresh_token'] ?? null,
+                'token_expires_at' => isset($tokenData['expires_in']) 
+                    ? now()->addSeconds($tokenData['expires_in']) 
+                    : null,
+            ]);
+            
+            // Associate and save properly
+            $socialAccount->user_id = $user->user_id;
+            $socialAccount->save();
+        }
         
         // Login the user
         Auth::login($user);
