@@ -62,6 +62,9 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/profile', [AuthController::class, 'profile'])->name('profile');
     Route::put('/profile', [AuthController::class, 'updateProfile'])->name('profile.update');
     
+    // User dashboard
+    Route::get('/dashboard', [AuthController::class, 'dashboard'])->name('dashboard');
+    
     // Cart routes
     Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
     Route::post('/cart', [CartController::class, 'addToCart'])->name('cart.store');

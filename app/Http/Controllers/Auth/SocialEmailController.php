@@ -108,6 +108,6 @@ class SocialEmailController extends Controller
         session()->forget($provider . '_user');
         session()->forget($provider . '_token');
         
-        return redirect()->intended('/dashboard');
+        return redirect()->intended(route('dashboard'));
     }
 }

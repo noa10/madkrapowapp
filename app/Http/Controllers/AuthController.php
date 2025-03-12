@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\MadkrapowUser;
+use App\Models\MadkrapowOrder;
+use App\Models\MadkrapowProduct;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -156,5 +158,44 @@ class AuthController extends Controller
         $user->save();
 
         return redirect()->route('profile')->with('success', 'Profile updated successfully!');
+    }
+
+    /**
+     * Display the user dashboard page.
+     *
+     * @return \Illuminate\View\View
+     */
+    public function dashboard()
+    {
+        $user = Auth::user();
+        
+        // Get recent orders - limit to 5
+        $recentOrders = MadkrapowOrder::where('user_id', $user->user_id)
+            ->orderBy('order_date', 'desc')
+            ->limit(5)
+            ->get();
+        
+        // Get recommended products
+        $recommendedProducts = MadkrapowProduct::inRandomOrder()
+            ->limit(4)
+            ->get();
+        
+        // Get order statistics
+        $orderCount = MadkrapowOrder::where('user_id', $user->user_id)->count();
+        $pendingOrderCount = MadkrapowOrder::where('user_id', $user->user_id)
+            ->where('status', 'pending')
+            ->count();
+        $completedOrderCount = MadkrapowOrder::where('user_id', $user->user_id)
+            ->where('status', 'completed')
+            ->count();
+        
+        return view('dashboard.index', compact(
+            'user', 
+            'recentOrders', 
+            'recommendedProducts', 
+            'orderCount', 
+            'pendingOrderCount', 
+            'completedOrderCount'
+        ));
     }
 }

@@ -11,6 +11,9 @@
                     <h4 class="mb-0">My Account</h4>
                 </div>
                 <div class="list-group list-group-flush">
+                    <a href="{{ route('dashboard') }}" class="list-group-item list-group-item-action">
+                        <i class="bi bi-speedometer2 me-2"></i> Dashboard
+                    </a>
                     <a href="{{ route('profile') }}" class="list-group-item list-group-item-action active">
                         <i class="bi bi-person-fill me-2"></i> Profile
                     </a>

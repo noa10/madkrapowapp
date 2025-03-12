@@ -171,9 +171,9 @@ class TikTokController extends Controller
                 ->first();
             
             if ($socialAccount) {
-                // Login existing user
+                // Login the existing user
                 Auth::login($socialAccount->user);
-                return redirect()->intended('/dashboard');
+                return redirect()->intended(route('dashboard'));
             }
             
             // Create new user
@@ -216,7 +216,11 @@ class TikTokController extends Controller
             ];
             Log::info('TikTok rate limit info', $rateLimit);
             
-            return redirect()->intended('/dashboard');
+            // Clear the session data
+            session()->forget('tiktok_user');
+            session()->forget('tiktok_token');
+            
+            return redirect()->intended(route('dashboard'));
             
         } catch (\Exception $e) {
             Log::error('TikTok authentication exception', [
