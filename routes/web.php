@@ -7,9 +7,12 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ReviewController;
+use App\Http\Controllers\GrabAuthController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\LoyaltyRewardController;
 
 /*
 |--------------------------------------------------------------------------
@@ -43,6 +46,24 @@ Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
+// Grab OAuth routes
+Route::middleware(['auth'])->group(function () {
+    Route::get('/auth/grab', [GrabAuthController::class, 'redirect'])->name('auth.grab');
+    Route::get('/auth/grab/callback', [GrabAuthController::class, 'callback'])->name('auth.grab.callback');
+    Route::post('/auth/grab/disconnect', [GrabAuthController::class, 'disconnect'])->name('auth.grab.disconnect');
+});
+
+// Loyalty Rewards routes
+Route::middleware(['auth'])->group(function () {
+    Route::get('/loyalty', [LoyaltyRewardController::class, 'index'])->name('loyalty.index');
+    Route::post('/loyalty/award-points/{orderId}', [LoyaltyRewardController::class, 'awardPurchasePoints'])->name('loyalty.award-points');
+});
+
+// Admin-only Loyalty Rewards routes
+Route::middleware(['auth', 'admin'])->group(function () {
+    Route::post('/admin/loyalty/award-points', [LoyaltyRewardController::class, 'adminAwardPoints'])->name('admin.loyalty.award-points');
+});
+
 // Product routes
 Route::get('/products', [ProductController::class, 'index'])->name('products.index');
 Route::get('/products/{id}', [ProductController::class, 'show'])->name('products.show');
@@ -59,8 +80,9 @@ Route::delete('/reviews/{id}', [ReviewController::class, 'destroy'])->name('revi
 // Routes that require authentication
 Route::middleware(['auth'])->group(function () {
     // User profile
-    Route::get('/profile', [AuthController::class, 'profile'])->name('profile');
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::put('/profile', [AuthController::class, 'updateProfile'])->name('profile.update');
+    Route::get('/profile/grab/refresh', [ProfileController::class, 'refreshGrabTier'])->name('grab.tier.refresh');
     
     // User dashboard
     Route::get('/dashboard', [AuthController::class, 'dashboard'])->name('dashboard');
