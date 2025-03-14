@@ -36,6 +36,8 @@ class MadkrapowOrder extends Model
         'total_amount',
         'status',
         'shipping_cost',
+        'points_awarded',
+        'points_awarded_at',
     ];
 
     /**
@@ -47,6 +49,8 @@ class MadkrapowOrder extends Model
         'total_amount' => 'decimal:2',
         'shipping_cost' => 'decimal:2',
         'order_date' => 'datetime',
+        'points_awarded' => 'boolean',
+        'points_awarded_at' => 'datetime',
     ];
 
     /**

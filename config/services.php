@@ -36,6 +36,13 @@ return [
         'redirect' => env('TIKTOK_REDIRECT_URI'),
     ],
 
+    'grab' => [
+        'client_id' => env('GRAB_CLIENT_ID'),
+        'client_secret' => env('GRAB_CLIENT_SECRET'),
+        'redirect' => env('GRAB_REDIRECT_URI'),
+        'environment' => env('GRAB_ENVIRONMENT', 'staging'), // 'staging' or 'production'
+    ],
+
     'ses' => [
         'key' => env('AWS_ACCESS_KEY_ID'),
         'secret' => env('AWS_SECRET_ACCESS_KEY'),

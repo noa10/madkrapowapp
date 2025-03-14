@@ -132,8 +132,9 @@
                             </a>
                             <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
                                 <li><a class="dropdown-item" href="{{ route('dashboard') }}">Dashboard</a></li>
-                                <li><a class="dropdown-item" href="{{ route('profile') }}">Profile</a></li>
+                                <li><a class="dropdown-item" href="{{ route('profile.edit') }}">Profile</a></li>
                                 <li><a class="dropdown-item" href="{{ route('orders.index') }}">My Orders</a></li>
+                                <li><a class="dropdown-item" href="{{ route('loyalty.index') }}">Loyalty Rewards</a></li>
                                 <li><hr class="dropdown-divider"></li>
                                 <li>
                                     <form action="{{ route('logout') }}" method="POST">

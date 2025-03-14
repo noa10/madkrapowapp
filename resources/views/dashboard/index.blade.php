@@ -22,11 +22,14 @@
                     <a href="{{ route('dashboard') }}" class="list-group-item list-group-item-action active">
                         <i class="bi bi-speedometer2 me-2"></i> Dashboard
                     </a>
-                    <a href="{{ route('profile') }}" class="list-group-item list-group-item-action">
+                    <a href="{{ route('profile.edit') }}" class="list-group-item list-group-item-action">
                         <i class="bi bi-person-fill me-2"></i> Profile
                     </a>
                     <a href="{{ route('orders.index') }}" class="list-group-item list-group-item-action">
                         <i class="bi bi-box-seam me-2"></i> My Orders
+                    </a>
+                    <a href="{{ route('loyalty.index') }}" class="list-group-item list-group-item-action">
+                        <i class="bi bi-award me-2"></i> Loyalty Rewards
                     </a>
                     <a href="{{ route('cart.index') }}" class="list-group-item list-group-item-action">
                         <i class="bi bi-cart me-2"></i> Shopping Cart

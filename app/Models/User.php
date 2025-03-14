@@ -71,6 +71,6 @@ class User extends Authenticatable implements CanResetPassword
      */
     public function socialAccounts()
     {
-        return $this->hasMany(SocialAccount::class);
+        return $this->hasMany(SocialAccount::class, 'user_id', 'user_id');
     }
 }
